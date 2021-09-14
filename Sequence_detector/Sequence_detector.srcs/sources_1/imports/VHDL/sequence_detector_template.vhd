@@ -38,8 +38,8 @@ begin
     combinational: process (d_in, current_state)
     begin
         -- set default value
-        next_state <= current_state;                                          
-        d_out <='0'; --default output
+        --next_state <= current_state;                                          
+        --d_out <='0'; --default output
         
         case current_state is
             when s_init =>

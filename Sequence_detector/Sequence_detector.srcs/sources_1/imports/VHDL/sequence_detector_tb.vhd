@@ -29,7 +29,7 @@ architecture behavioral of sequence_detector_tb is
     
     signal bit_stream: std_logic := '0';
 
-    signal moore_detected: std_logic;
+    signal moore_detected: std_logic := '0';
     signal mealy_detected: std_logic;
 
     signal moore_count: integer := 0;
@@ -52,14 +52,6 @@ begin
             stimulus_stream => bit_stream
         );
 
-    uut_moore: entity work.moore_sequence_detector(moore) 
-        port map (
-            clk => clk,
-            reset_n => reset,
-            d_in => bit_stream,
-            d_out => moore_detected
-        );
-    
     uut_mealy: entity work.mealy_sequence_detector(mealy) 
         port map (
             clk => clk,
@@ -67,17 +59,25 @@ begin
             d_in => bit_stream,
             d_out => mealy_detected
         );
-    detection_counter: process (moore_detected, mealy_detected, reset)
+    -- uncomment section below for instantiating mealy type machine
+    uut_moore: entity work.moore_sequence_detector(moore) 
+        port map (
+            clk => clk,
+            reset_n => reset,
+            d_in => bit_stream,
+            d_out => moore_detected
+        );
+    detection_counter: process (mealy_detected, reset)
     begin
         if reset = '0' then
-            moore_count <= 0;
             mealy_count <= 0;
+            moore_count <= 0;
         else
-            if(moore_detected = '1') then
-               moore_count <= moore_count+1;
+            if(mealy_detected = '1') then
+               mealy_count <= mealy_count+1;
             end if;
-            if (mealy_detected = '1' ) then
-                mealy_count <= mealy_count +1;
+            if(moore_detected = '1') then
+                moore_count <= moore_count + 1;
             end if;
         end if;
     end process;
