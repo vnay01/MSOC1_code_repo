@@ -1,20 +1,20 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity moore_sequence_detector is
+entity mealy_sequence_detector is
     port (
         clk: in std_logic;
         reset_n: in std_logic;
         d_in: in std_logic;
         d_out: out std_logic
     );
-end moore_sequence_detector;
+end mealy_sequence_detector;
 
-architecture moore of moore_sequence_detector is
+architecture mealy of mealy_sequence_detector is
 
     -- Define a enumeration type for the states
    type state_type is (s_init, s_1, s_2, s_3, s_4 , s_5,
-                        s_6, s_7, s_8, s_9, s_10, s_11, s_final
+                        s_6, s_7, s_8, s_9, s_10, s_final
                         );
     
     -- Define the needed internal signals
@@ -44,7 +44,7 @@ begin
         case current_state is
             when s_init =>
                 if d_in = '0' then
-                    next_state <= s_init;  -- is this line necessary?
+                    next_state <= s_init;  -- is this line necessary? 
                 else
                     next_state <= s_1;
                 end if;
@@ -64,6 +64,7 @@ begin
 				if d_in ='1' then
 					next_state <= s_4;
 					else 
+					
 					next_state <= s_1;
 					end if;
 			when s_4=>
@@ -104,22 +105,16 @@ begin
 					end if;
 			when s_10=>
 				if d_in ='1' then
-					next_state <= s_11;
+					next_state <= s_final;
 					else
 					next_state <= s_2;
 					end if;
-			when s_11=>
-				if d_in ='0' then
-					next_state <= s_final;
-					else
-					next_state <= s_6;
-					end if;      
 			when s_final=>
-			 if d_in = '0' then
-			     next_state <=s_3;
-			     else
-			     next_state <=s_6;
-			     end if;
+			    if d_in = '0' then
+			     next_state<=s_2;
+			    else
+			     next_state<=s_6;
+			    end if; 
 			when others=>
 			next_state <= next_state;   
         end case;
@@ -131,29 +126,29 @@ begin
            -- d_out <= '0'; -- default output
             
             case current_state is
-                when s_init =>
-                d_out <= '0';
-                when s_1 =>
-                d_out <= '0';
-                when s_2 =>
-                d_out <= '0';
-                when s_3 =>
-                d_out <= '0';
-                when s_4 =>
-                d_out <= '0';
-                when s_5=>
-                d_out <= '0';
-                when s_6 =>
-                d_out <= '0';
-                when s_7 =>
-                d_out <= '0';
-                when s_8 =>
-                d_out <= '0';
-                when s_9 =>
-                d_out <= '0';
-                when s_10 =>
-                d_out <= '0';
-                when s_11 =>
+--                when s_init =>
+--                d_out <= '0';
+--                when s_1 =>
+--                d_out <= '0';
+--                when s_2 =>
+--                d_out <= '0';
+--                when s_3 =>
+--                d_out <= '0';
+--                when s_4 =>
+--                d_out <= '0';
+--                when s_5=>
+--                d_out <= '0';
+--                when s_6 =>
+--                d_out <= '0';
+--                when s_7 =>
+--                d_out <= '0';
+--                when s_8 =>
+--                d_out <= '0';
+--                when s_9 =>
+--                d_out <= '0';
+--                when s_10 =>
+--                d_out <= '0';
+                when s_final =>
                     if ( d_in ='0' ) then
                         d_out <= '1';
                     else
@@ -164,4 +159,4 @@ begin
              end case;
             end process;
 
-end moore;
+end mealy;
