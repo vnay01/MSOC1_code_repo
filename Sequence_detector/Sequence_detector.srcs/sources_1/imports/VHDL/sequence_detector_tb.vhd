@@ -26,7 +26,7 @@ architecture behavioral of sequence_detector_tb is
         
     signal clk: std_logic := '0';
     signal reset: std_logic := '0';
-    
+     
     signal bit_stream: std_logic := '0';
 
     signal moore_detected: std_logic := '0';
@@ -67,7 +67,7 @@ begin
             d_in => bit_stream,
             d_out => moore_detected
         );
-    detection_counter: process (mealy_detected, reset)
+    detection_counter: process (mealy_detected, moore_detected, reset)
     begin
         if reset = '0' then
             mealy_count <= 0;

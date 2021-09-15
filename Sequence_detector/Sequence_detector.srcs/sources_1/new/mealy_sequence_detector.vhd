@@ -64,7 +64,7 @@ begin
 				if d_in ='1' then
 					next_state <= s_4;
 					else 
-					next_state <= s_1;
+					next_state <= s_init;
 					end if;
 			when s_4=>
 				if d_in ='1' then
@@ -113,9 +113,7 @@ begin
 			     next_state<=s_2;
 			    else
 			     next_state<=s_6;
-			    end if; 
-			when others=>
-			next_state <= next_state;   
+			    end if;    
         end case;
     end process;
  
@@ -125,28 +123,28 @@ begin
            -- d_out <= '0'; -- default output
             
             case current_state is
-                when s_init =>
-                d_out <= '0';
-                when s_1 =>
-                d_out <= '0';
-                when s_2 =>
-                d_out <= '0';
-                when s_3 =>
-                d_out <= '0';
-                when s_4 =>
-                d_out <= '0';
-                when s_5=>
-                d_out <= '0';
-                when s_6 =>
-                d_out <= '0';
-                when s_7 =>
-                d_out <= '0';
-                when s_8 =>
-                d_out <= '0';
-                when s_9 =>
-                d_out <= '0';
-                when s_10 =>
-                d_out <= '0';
+--                when s_init =>
+--                d_out <= '0';
+--                when s_1 =>
+--                d_out <= '0';
+--                when s_2 =>
+--                d_out <= '0';
+--                when s_3 =>
+--                d_out <= '0';
+--                when s_4 =>
+--                d_out <= '0';
+--                when s_5=>
+--                d_out <= '0';
+--                when s_6 =>
+--                d_out <= '0';
+--                when s_7 =>
+--                d_out <= '0';
+--                when s_8 =>
+--                d_out <= '0';
+--                when s_9 =>
+--                d_out <= '0';
+--                when s_10 =>
+--                d_out <= '0';
                 when s_final =>
                     if ( d_in ='0' ) then
                         d_out <= '1';

@@ -29,7 +29,7 @@ begin
         if reset_n = '0' then
             current_state <= s_init; -- initial state
         elsif rising_edge(clk) then
-            current_state <= next_state;
+              current_state <= next_state;
         end if;
     end process;
     
@@ -58,7 +58,7 @@ begin
 				if d_in ='0' then
 					next_state <= s_3;
 				else
-					next_state <= s_1;
+					next_state <= s_init;
 					end if;
 			when s_3=>
 				if d_in ='1' then
@@ -120,9 +120,7 @@ begin
 			     else
 			     next_state <=s_6;
 			     end if;
-			when others=>
-			next_state <= next_state;   
-        end case;
+			end case;
     end process;
  
 -- Output combinational logic
@@ -131,34 +129,8 @@ begin
            -- d_out <= '0'; -- default output
             
             case current_state is
-                when s_init =>
-                d_out <= '0';
-                when s_1 =>
-                d_out <= '0';
-                when s_2 =>
-                d_out <= '0';
-                when s_3 =>
-                d_out <= '0';
-                when s_4 =>
-                d_out <= '0';
-                when s_5=>
-                d_out <= '0';
-                when s_6 =>
-                d_out <= '0';
-                when s_7 =>
-                d_out <= '0';
-                when s_8 =>
-                d_out <= '0';
-                when s_9 =>
-                d_out <= '0';
-                when s_10 =>
-                d_out <= '0';
-                when s_11 =>
-                    if ( d_in ='0' ) then
-                        d_out <= '1';
-                    else
-                        d_out <='0';
-                    end if;
+                when s_final=>
+                    d_out <= '1';
                 when others =>
                     d_out <= '0';
              end case;
