@@ -9,9 +9,9 @@ entity ALU_top is
           reset      : in  std_logic;
           b_Enter    : in  std_logic;
           b_Sign     : in  std_logic;
-          input      : in  std_logic_vector(7 downto 0)
-          --seven_seg  : out std_logic_vector(6 downto 0);
-          --anode      : out std_logic_vector(3 downto 0)
+          input      : in  std_logic_vector(7 downto 0);
+          seven_seg  : out std_logic_vector(6 downto 0);
+          anode      : out std_logic_vector(3 downto 0)
         );
 end ALU_top;
 
@@ -79,8 +79,8 @@ end component;
    signal tb_result : std_logic_vector ( 7 downto 0) := (others => '0') ;
    signal tb_overflow, tb_sign : std_logic := '0';
    signal tb_bcd_out : std_logic_vector(9 downto 0) := "0000000000";
-   signal board_DIGIT_ANODE : std_logic_vector(3 downto 0) := "1111";
-   signal board_SEGMENT : std_logic_vector( 6 downto 0) := "1111111";
+--   signal board_DIGIT_ANODE : std_logic_vector(3 downto 0) := "1111";
+--   signal board_SEGMENT : std_logic_vector( 6 downto 0) := "1111111";
    
 
 begin
@@ -152,8 +152,8 @@ seg: seven_seg_driver
           BCD_digit => tb_bcd_out,          
           sign  => tb_sign,
           overflow  => tb_overflow,
-          DIGIT_ANODE => board_DIGIT_ANODE,
-          SEGMENT   => board_SEGMENT
+          DIGIT_ANODE => anode,
+          SEGMENT   => seven_seg
         );
    
 

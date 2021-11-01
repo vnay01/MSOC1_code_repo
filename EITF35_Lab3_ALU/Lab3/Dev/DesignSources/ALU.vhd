@@ -26,6 +26,16 @@ alias sign_B : std_logic is B_ext(7) ;
 alias sign_result : std_logic is sum(7) ; 
 signal ovf : std_logic:= '0';
 
+-- modulo3 module pending
+
+--component mod3 is
+--	port (
+--	       clk : in std_logic ;
+--			A : in std_logic_vector(7 downto 0);
+--			mod3_out: out std_logic_vector(1 downto 0)
+--				);
+--end component;
+
 begin
     A_ext <= signed( '0' & (A));
     B_ext <= signed( '0' & (B));
@@ -70,7 +80,7 @@ begin
         end if;
         
       
-        when "1011" =>                 -- unsigned subtraction
+        when "1011" =>                 -- signed subtraction
         sub <= std_logic_vector(A_ext - B_ext);
         sum <= "000000000";
         result <= sub(7 downto 0);
