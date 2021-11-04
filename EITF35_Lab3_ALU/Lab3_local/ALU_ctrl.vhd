@@ -27,7 +27,7 @@ begin
 
    -- DEVELOPE YOUR CODE HERE
    -- process to update current state
-   state_transition : process(reset, enter, sign)
+   state_transition : process(reset, enter)
 			begin
 		--	if rising_edge(clk) then	
     			if reset = '1' then
@@ -45,94 +45,94 @@ next_state_determination_logic : process( enter, sign )
 		begin
 			case current_state is 
 				when S0 =>
-				if enter = '1' then             -- state change occurs when "enter" is pressed.
+				if falling_edge (enter) then             -- state change occurs when "enter" is pressed.
 				next_state <= S1;
-				else
-				next_state <= current_state;
+--				else
+--				next_state <= current_state;
 				end if;
 				
 				when S1 =>
-				if enter = '1' then
+				if falling_edge (enter) then
 				next_state <= S2;
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 				
 				when S2 =>
-				if enter = '1' then
+				if falling_edge (enter) then
 				    if sign = '0' then
     				next_state <= S3;
     				else
     				next_state <= S6;
     				end if;
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 				
 				when S3 =>
-				if enter = '1' then
+				if falling_edge (enter) then
 				    if sign = '0' then
 				    next_state <= S4;
 				    else
 				    next_state <= S7;
 				    end if;
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 				
 				when S4 =>
-				if enter = '1' then
+				if falling_edge (enter) then
 				    if sign = '0' then  
 				    next_state <= S5;
 				    else
 				    next_state <= S8;
 				    end if;
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 				
 				when S5 =>
-				if enter = '1' then
+				if falling_edge (enter) then
 				    if sign = '1' then
     				next_state <= S6;
     				else
     				next_state <= S3;
     				end if;
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 				
 				when S6 =>
-				if enter = '1' then
+				if falling_edge(enter) then
 				    if sign = '1' then
     				next_state <= S7;
     				else
     				next_state <= S4;
     				end if;   			
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 				
 				when S7 =>
-				if enter = '1' then
+				if falling_edge (enter) then
 				    if sign = '1' then
     				next_state <= S8;
     				else
     				next_state <= S5;
     				end if;
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 				
 				when S8 =>
-				if enter = '1' then
+				if falling_edge (enter) then
 				    if sign = '1' then
     				next_state <= S6;
     				else
     				next_state <= S3;
     				end if;
-				else
-				next_state <= current_state;
+--				elsif falling_edge(enter) then
+--				next_state <= current_state;
 				end if;
 			end case;
 		end process;
@@ -142,24 +142,24 @@ next_state_determination_logic : process( enter, sign )
 -- will be optimized further to use less states and registers.
 ALU_operation: process(current_state, sign , enter)
 			begin	
-			FN <= "1111";
+	--		FN <= "1111";
 			case current_state is 
 			when S0 =>
-			if enter = '1' then
+			if falling_edge (enter) then
 			FN <= "0000";			-- sample A
-			else
-			FN <= "1111";
+--			elsif falling_edge(enter) then
+--			FN <= "1111";
 			end if;
 			
 			when S1 =>
-			if enter = '1' then
+			if falling_edge (enter) then
 			FN <= "0001";			-- sample B
-			else
-			FN <= "1111";
+--			elsif falling_edge(enter) then
+--			FN <= "1111";
 			end if;
 			
 			when S2 =>
-			if enter = '1' then
+			if falling_edge (enter) then
 			 if sign = '1' then
 			 FN <= "1010";			-- signed A+B
 			 else
@@ -168,7 +168,7 @@ ALU_operation: process(current_state, sign , enter)
 			 end if;
 			 
 			when S3 =>
-			if enter = '1' then
+			if falling_edge (enter) then
              if sign = '1' then
              FN <= "1011";            -- signed A-B
              else
@@ -176,7 +176,7 @@ ALU_operation: process(current_state, sign , enter)
              end if;
              end if;
 			when S4 =>
-			if enter = '1' then
+			if falling_edge (enter) then
              if sign = '1' then
              FN <= "1100";            -- signed Amod3
              else
@@ -185,7 +185,7 @@ ALU_operation: process(current_state, sign , enter)
              end if;
 			
 			when S5 =>		
-			if enter = '1' then
+			if falling_edge (enter) then
              if sign = '1' then
              FN <= "1010";            -- signed A+B
              else
@@ -194,7 +194,7 @@ ALU_operation: process(current_state, sign , enter)
              end if;
 			
 			when S6 => 
-			if enter = '1' then
+			if falling_edge (enter) then
              if sign = '1' then
              FN <= "1011";            -- signed A-B
              else
@@ -203,7 +203,7 @@ ALU_operation: process(current_state, sign , enter)
              end if;
 
 			when S7 =>
-			if enter = '1' then
+			if falling_edge (enter) then
              if sign = '1' then
              FN <= "1100";            -- signed Amod3
              else
@@ -212,7 +212,7 @@ ALU_operation: process(current_state, sign , enter)
              end if;
 		
 			when S8 =>
-             if enter = '1' then
+             if falling_edge (enter) then
               if sign = '1' then
               FN <= "1010";            -- signed A+B
               else
@@ -221,7 +221,9 @@ ALU_operation: process(current_state, sign , enter)
               end if;
 
 			when others =>
+			if falling_edge (enter) then
 			FN <= "1111";
+			end if;
 			end case;
 		end process;
 

@@ -79,9 +79,9 @@ end component;
    signal A_input, B_input : std_logic_vector( 7 downto 0 );
    
    -- signals for testing
-   signal tb_result : std_logic_vector ( 7 downto 0) := (others => '0') ;
-   signal tb_overflow, tb_sign : std_logic := '0';
-   signal tb_bcd_out : std_logic_vector(9 downto 0) := "0000000000";
+   signal tb_result : std_logic_vector ( 7 downto 0) ;
+   signal tb_overflow, tb_sign : std_logic;
+   signal tb_bcd_out : std_logic_vector(9 downto 0);
 --   signal board_DIGIT_ANODE : std_logic_vector(3 downto 0) := "1111";
 --   signal board_SEGMENT : std_logic_vector( 6 downto 0) := "1111111";
    
