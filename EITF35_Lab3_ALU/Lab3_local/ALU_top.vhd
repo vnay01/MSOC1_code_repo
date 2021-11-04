@@ -6,7 +6,8 @@ use work.ALU_components_pack.all;
 
 entity ALU_top is
    port ( clk        : in  std_logic;
-          reset      : in  std_logic;
+--          btnU       : in  std_logic;
+          reset      : in std_logic;
           b_Enter    : in  std_logic;
           b_Sign     : in  std_logic;
           input      : in  std_logic_vector(7 downto 0);
@@ -75,7 +76,7 @@ component seven_seg_driver is
 end component;
 
    -- SIGNAL DEFINITIONS
-   signal Enter, Sign, edge_Enter, edge_sign : std_logic;
+   signal Enter, Sign, edge_Enter, edge_sign, edge_reset: std_logic;
    signal FN_ctrl : std_logic_vector(3 downto 0) ;
    signal RegCtrl_signal : std_logic_vector(1 downto 0);
    signal A_input, B_input : std_logic_vector( 7 downto 0 );
@@ -86,10 +87,12 @@ end component;
    signal tb_bcd_out : std_logic_vector(9 downto 0);
 --   signal board_DIGIT_ANODE : std_logic_vector(3 downto 0) := "1111";
 --   signal board_SEGMENT : std_logic_vector( 6 downto 0) := "1111111";
+    signal reset_in : std_logic;
    
 
 begin
 
+reset_in <= reset;
     -- On - board buttons connections
   
     
@@ -100,18 +103,25 @@ begin
    
    ------- @ vnay01 :: Removing debouncers as the output of debouncers were not good HIGH..
                     -- something to do with architecture.. will check later.
---   debouncer_enter: debouncer
---   port map ( clk          => clk,
---              reset        => reset,
---              button_in    => b_Enter,
---              button_out   => Enter
---            );
+   debouncer_enter: debouncer
+   port map ( clk          => clk,
+              reset        => reset,
+              button_in    => b_Enter,
+              button_out   => Enter
+            );
    
---    debouncer_sign: debouncer
+    debouncer_sign: debouncer
+         port map ( clk          => clk,
+                    reset        => reset,
+                    button_in    => b_sign,
+                    button_out   => Sign
+                       );
+    
+--        debouncer_reset: debouncer
 --         port map ( clk          => clk,
---                    reset        => reset,
---                    button_in    => b_sign,
---                    button_out   => Sign
+--                    reset        => ,
+--                    button_in    => reset,
+--                    button_out   => reset_in
 --                       );
 
    -- ****************************
@@ -121,20 +131,29 @@ begin
    port map (
                 clk => clk,
                 reset => reset,
-                button_in => b_Enter,
+                button_in => Enter,
                 button_out => edge_Enter
                 );
    Sign_edge_detector : edge_detector
    port map (
                 clk => clk,
                 reset => reset,
-                button_in => b_sign,
+                button_in => Sign,
                 button_out => edge_sign
                 );
+   -- no changes in state --- maybe because reset is always active!!
+   -- Lets use falling edge of reset as global reset
+--reset_edge_detector : edge_detector
+--   port map (
+--                clk => clk,
+--                reset => reset,
+--                button_in => reset_in,
+--                button_out => edge_reset
+--                );
    ALU_Controller: ALU_ctrl
    port map (
                clk => clk,
-               reset => reset,
+               reset => reset_in,
                enter => edge_Enter,          -- connected to out of debouncer
                sign => edge_sign,
                FN => FN_ctrl,
@@ -144,7 +163,7 @@ begin
    register_update: regUpdate
     port map (
                 clk => clk,
-                reset => reset,
+                reset => reset_in,
                 RegCtrl => RegCtrl_signal,
                 input => input,                   -- from Switch positions ( XDC file )
                 A => A_input,
@@ -170,7 +189,7 @@ begin
 seg: seven_seg_driver
    port map ( 
           clk => clk,
-          reset => reset,
+          reset => reset_in,
           BCD_digit => tb_bcd_out,          
           sign  => tb_sign,
           overflow  => tb_overflow,

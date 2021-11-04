@@ -50,7 +50,12 @@ begin  -- structural
         "11110010" after 7 * period,   -- A = 242
         "00110001" after 8 * period,   -- A = 49
         "01010101" after 9 * period,  -- A = 85
-        "11011011" after 10*period;  -- A = - 91
+        "11011011" after 10*period,  -- A = - 91
+        "11111111" after 11*period,
+        "10011101" after 12*period,
+        "11011010" after 13*period,
+        "11100011" after 14*period;
+        
    tb_B <= "00000011",                    -- B = 3
         "00000011" after 1 * period,   -- B = 3
         "10010001" after 2 * period,   -- B = 145
@@ -72,10 +77,16 @@ begin  -- structural
          "0010" after 7 * period,             -- Pass unsigned A + B
          "0011" after 8 * period,             -- Pass unsigned A - B
          "0100" after 9 * period,             -- Pass unsigned max(A, B)
-         "1010" after 10 * period,            -- Pass signed A + B
+         "1100" after 10 * period,            -- Pass signed A + B
          "1011" after 11 * period,            -- Pass signed A - B
          "1100" after 12 * period,            -- Pass signed max(A, B)
          "1100" after 13* period,             -- pass -85
-         "1111" after 14 * period;            -- Invalid input command
+         "1100" after 14* period,
+         "1100" after 15* period,
+         "1100" after 16* period,
+         "1100" after 17* period,
+         "1100" after 18* period,
+         "1100" after 19* period,
+         "1111" after 20 * period;            -- Invalid input command
 
 end structural;
