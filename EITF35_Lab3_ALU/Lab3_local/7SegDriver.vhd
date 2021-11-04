@@ -28,7 +28,7 @@ signal clkdiv : std_logic_vector(20 downto 0) ; -- will be used to produce a ref
 --signal displayed_number : std_logic_vector(15 downto 0);
 
 begin
-	s <= clkdiv(20 downto 19);
+	s <= clkdiv(20 downto 19);           -- just for testing
 	anode_enable <= "1111";
 	sign_overflow <= (sign & overflow);
 	
@@ -43,10 +43,19 @@ begin
 					display_digit <= BCD_digit(7 downto 4);
 					when "10" =>
 					display_digit <= ("00" & BCD_digit(9 downto 8));
-					when "11" =>
-					display_digit <= ("11" & sign_overflow);			-- append 11 to the MSB so there is no collission with BCD representation
-					when others=>
-					display_digit <= (others => '0');
+					when others =>
+					if sign_overflow ="00" then
+					display_digit <= ("11" & sign_overflow);	-- 1100	  -- so display a blank -- append 11 to the MSB so there is no collission with BCD representation
+                    elsif sign_overflow = "01" then
+                    display_digit <= ("11" & sign_overflow);        -- 1101     -- show F
+                    elsif sign_overflow = "10" then
+                    display_digit <= ("11" & sign_overflow);        -- 1110     -- show sign
+                    elsif sign_overflow = "11" then 
+                    display_digit <= ("11" & sign_overflow);        -- 1111     -- never occurs  - so display a blank
+                    end if;
+                   
+--					when others=>                                          --is it required!!?
+--					display_digit <= (others => '0');
 					end case;
 			end process;
 			
@@ -74,12 +83,16 @@ segment_led_pattern : process(display_digit)
     SEGMENT <= "0000000";    --8
     when "1001" =>
     SEGMENT <= "0010000";    --9
+    when "1100" =>
+    SEGMENT <= "1111111";          -- display a blank
 	when "1110" =>					-- when sign is '-'
 	SEGMENT <= "0111111";
 	when "1101" =>
 	SEGMENT <= "0001110";				-- when overflow occurs 'F'
+	when "1111" =>
+	SEGMENT <= "1111111";          -- display a blank
     when others=>
-    SEGMENT <= "1111111"; -- switch of for other values.
+    SEGMENT <= "1111111"; -- switch off for other values.
    end case;
  end process;
  

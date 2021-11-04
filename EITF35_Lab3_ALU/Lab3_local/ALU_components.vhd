@@ -163,7 +163,7 @@ begin
 		end process;
 	combinational : process(first_sample, final_sample)
 		begin
-			button_out <= ( first_sample) and (not final_sample);
+			button_out <= ( not first_sample) and ( final_sample);
 		end process;
 end edge_detector_arch;
 

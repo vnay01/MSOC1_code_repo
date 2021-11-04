@@ -23,7 +23,7 @@ architecture structural of tb_ALU is
    signal tb_overflow   : std_logic;
    signal tb_sign       : std_logic;
    
-   constant period   : time := 2500 ns;
+   constant period   : time := 100 ns;
 
 begin  -- structural
    

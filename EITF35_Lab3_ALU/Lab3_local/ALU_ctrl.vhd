@@ -27,112 +27,122 @@ begin
 
    -- DEVELOPE YOUR CODE HERE
    -- process to update current state
-   state_transition : process(reset, enter)
+   state_transition : process(reset, enter, clk)
 			begin
 		--	if rising_edge(clk) then	
     			if reset = '1' then
 			     	current_state <= S0;
 			else
-			if rising_edge(enter) then               -- cannot use system clock!!! too many transistions!!
+			if rising_edge(clk) then 
+			     if enter ='1' then              -- cannot use system clock!!! too many transistions!!
 			current_state <= next_state;
+			 end if;
 			end if;
 			end if;
 			end process;
 
 -- process below implements logic to determine state transitions
 -- needs optimizations
-next_state_determination_logic : process( enter, sign )
+next_state_determination_logic : process( enter, sign, current_state )
 		begin
 			case current_state is 
 				when S0 =>
-				if falling_edge (enter) then             -- state change occurs when "enter" is pressed.
+				if enter = '1' then             -- state change occurs when "enter" is pressed.
 				next_state <= S1;
---				else
---				next_state <= current_state;
+				else
+				next_state <= current_state;
 				end if;
 				
 				when S1 =>
-				if falling_edge (enter) then
+				if enter = '1' then
 				next_state <= S2;
+				else
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+				next_state <= current_state;
 				end if;
 				
 				when S2 =>
-				if falling_edge (enter) then
+				if enter = '1' then
 				    if sign = '0' then
     				next_state <= S3;
     				else
     				next_state <= S6;
     				end if;
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+                else
+				next_state <= current_state;
 				end if;
 				
 				when S3 =>
-				if falling_edge (enter) then
+				if enter = '1' then
 				    if sign = '0' then
 				    next_state <= S4;
 				    else
 				    next_state <= S7;
 				    end if;
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+                else
+				next_state <= current_state;
 				end if;
 				
 				when S4 =>
-				if falling_edge (enter) then
+				if enter = '1' then
 				    if sign = '0' then  
 				    next_state <= S5;
 				    else
 				    next_state <= S8;
 				    end if;
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+                else
+				next_state <= current_state;
 				end if;
 				
 				when S5 =>
-				if falling_edge (enter) then
+				if enter = '1' then
 				    if sign = '1' then
     				next_state <= S6;
     				else
     				next_state <= S3;
     				end if;
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+                else
+				next_state <= current_state;
 				end if;
 				
 				when S6 =>
-				if falling_edge(enter) then
+				if enter = '1' then
 				    if sign = '1' then
     				next_state <= S7;
     				else
     				next_state <= S4;
     				end if;   			
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+                else
+				next_state <= current_state;
 				end if;
 				
 				when S7 =>
-				if falling_edge (enter) then
+				if enter = '1' then
 				    if sign = '1' then
     				next_state <= S8;
     				else
     				next_state <= S5;
     				end if;
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+                else
+				next_state <= current_state;
 				end if;
 				
 				when S8 =>
-				if falling_edge (enter) then
+				if enter = '1' then
 				    if sign = '1' then
     				next_state <= S6;
     				else
     				next_state <= S3;
     				end if;
+    				else
 --				elsif falling_edge(enter) then
---				next_state <= current_state;
+				next_state <= current_state;
 				end if;
 			end case;
 		end process;
@@ -140,91 +150,110 @@ next_state_determination_logic : process( enter, sign )
 --process to generate ALU operation signals
 
 -- will be optimized further to use less states and registers.
-ALU_operation: process(current_state, sign , enter)
+ALU_operation: process(current_state, sign , enter, clk)
 			begin	
 	--		FN <= "1111";
-			case current_state is 
+	if rising_edge(clk) then
+		case current_state is 
 			when S0 =>
-			if falling_edge (enter) then
+			if enter = '1' then
 			FN <= "0000";			-- sample A
 --			elsif falling_edge(enter) then
---			FN <= "1111";
+            else
+			FN <= "1111";
 			end if;
 			
 			when S1 =>
-			if falling_edge (enter) then
+			if enter = '1' then
 			FN <= "0001";			-- sample B
 --			elsif falling_edge(enter) then
---			FN <= "1111";
+			else
+			FN <= "1111";
 			end if;
 			
 			when S2 =>
-			if falling_edge (enter) then
+			if enter = '1' then
 			 if sign = '1' then
 			 FN <= "1010";			-- signed A+B
 			 else
 			 FN <= "0010";           -- unsigned A+B
 			 end if;
+			else
+			FN <= "1111";
 			 end if;
 			 
 			when S3 =>
-			if falling_edge (enter) then
+			if enter = '1' then
              if sign = '1' then
              FN <= "1011";            -- signed A-B
              else
              FN <= "0011";           -- unsigned A-B
              end if;
+             else
+             FN <= "1111";
              end if;
+             
 			when S4 =>
-			if falling_edge (enter) then
+			if enter = '1' then
              if sign = '1' then
              FN <= "1100";            -- signed Amod3
              else
              FN <= "0100";           -- unsigned Amod3
              end if;
+             else
+             FN <= "1111";
              end if;
 			
 			when S5 =>		
-			if falling_edge (enter) then
+			if enter = '1' then
              if sign = '1' then
              FN <= "1010";            -- signed A+B
              else
              FN <= "0010";           -- unsigned A+B
              end if;
+             else
+             FN <= "1111";
              end if;
 			
 			when S6 => 
-			if falling_edge (enter) then
+			if enter = '1' then
              if sign = '1' then
              FN <= "1011";            -- signed A-B
              else
              FN <= "0011";           -- unsigned A-B
              end if;
+             else
+             FN <= "1111";
              end if;
 
 			when S7 =>
-			if falling_edge (enter) then
+			if enter = '1' then
              if sign = '1' then
              FN <= "1100";            -- signed Amod3
              else
              FN <= "0100";           -- unsigned Amod3
              end if;
+             else
+             FN <= "1111";
              end if;
 		
 			when S8 =>
-             if falling_edge (enter) then
+             if enter = '1' then
               if sign = '1' then
               FN <= "1010";            -- signed A+B
               else
               FN <= "0010";           -- unsigned A+B
               end if;
+              else
+              FN <= "1111";
               end if;
 
 			when others =>
-			if falling_edge (enter) then
+--			if enter = '1' then
 			FN <= "1111";
-			end if;
+--			end if;
 			end case;
+			end if;
 		end process;
 
 -- block below outputs register update control signals to ALU block.

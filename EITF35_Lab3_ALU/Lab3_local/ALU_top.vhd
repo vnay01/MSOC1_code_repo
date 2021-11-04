@@ -19,6 +19,8 @@ architecture structural of ALU_top is
 
 -- component declarations
 
+-- output of debouncer is not clear HIGH...!!!
+
 
 component ALU_ctrl is
    port ( clk     : in  std_logic;
@@ -52,7 +54,7 @@ end component;
 
 -- binary2BCD converter
 component binary2BCD is
-   generic ( WIDTH : integer := 8   -- 8 bit binary to BCD
+   generic ( WIDTH : integer  -- 8 bit binary to BCD
            );
    port (  
           binary_in : in  std_logic_vector(WIDTH-1 downto 0);  -- binary input width
@@ -95,19 +97,22 @@ begin
     
    ---- to provide a clean signal out of a bouncy one coming from the push button
    ---- input(b_Enter) comes from the pushbutton; output(Enter) goes to the FSM 
-   debouncer_enter: debouncer
-   port map ( clk          => clk,
-              reset        => reset,
-              button_in    => b_Enter,
-              button_out   => Enter
-            );
    
-    debouncer_sign: debouncer
-         port map ( clk          => clk,
-                    reset        => reset,
-                    button_in    => b_sign,
-                    button_out   => Sign
-                       );
+   ------- @ vnay01 :: Removing debouncers as the output of debouncers were not good HIGH..
+                    -- something to do with architecture.. will check later.
+--   debouncer_enter: debouncer
+--   port map ( clk          => clk,
+--              reset        => reset,
+--              button_in    => b_Enter,
+--              button_out   => Enter
+--            );
+   
+--    debouncer_sign: debouncer
+--         port map ( clk          => clk,
+--                    reset        => reset,
+--                    button_in    => b_sign,
+--                    button_out   => Sign
+--                       );
 
    -- ****************************
    -- DEVELOPE THE STRUCTURE OF ALU_TOP HERE
@@ -116,14 +121,14 @@ begin
    port map (
                 clk => clk,
                 reset => reset,
-                button_in => Enter,
+                button_in => b_Enter,
                 button_out => edge_Enter
                 );
    Sign_edge_detector : edge_detector
    port map (
                 clk => clk,
                 reset => reset,
-                button_in => Sign,
+                button_in => b_sign,
                 button_out => edge_sign
                 );
    ALU_Controller: ALU_ctrl
@@ -157,6 +162,7 @@ begin
                 );
        
    Bin2BCD_block : binary2BCD
+   generic map (WIDTH => 8)
    port map (
                binary_in => tb_result,
                BCD_out => tb_bcd_out
