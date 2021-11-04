@@ -3,8 +3,8 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-library work;
-use work.ALU_components_pack.all;
+--library work;
+--use work.ALU_components_pack.all;
 
 entity binary2BCD is
    generic ( WIDTH : integer := 8   -- 8 bit binary to BCD
