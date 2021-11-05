@@ -35,8 +35,11 @@ begin
 	
 	
 	-- process to select the segment of display which is to be activated
-	segement_selection: process(s, BCD_digit, sign_overflow)
+	segement_selection: process(s, BCD_digit, sign_overflow, reset)
 			begin
+			if reset ='1' then
+			 display_digit <= "1111";                -- display ' ---- '
+			 else
 				case s is
 					when "00" =>
 					display_digit <= BCD_digit(3 downto 0);
@@ -56,8 +59,9 @@ begin
 --                    display_digit <= ("11" & sign_overflow);        -- 1111     -- never occurs  - so display a blank
 --                    end if;
 					when others=>                                          --is it required!!?
-					display_digit <= "1111";               -- reset display
+					display_digit <= "1111";                -- display ' ---- '
 					end case;
+					end if;
 			end process;
 			
 -- process to switch ON LED pattern of the digits.
@@ -90,10 +94,12 @@ segment_led_pattern : process(display_digit)
 	SEGMENT <= "0111111";
 	when "1101" =>
 	SEGMENT <= "0001110";				-- when overflow occurs 'F'
+	when "1011" =>
+	SEGMENT <= "0111111";          -- display a -
 	when "1111" =>
-	SEGMENT <= "1111111";          -- display a blank
+	SEGMENT <= "1111111";
     when others=>
-    SEGMENT <= "1111111"; -- switch off for other values.
+    SEGMENT <= "1111111";       -- switch off for other values.
    end case;
  end process;
  
@@ -103,6 +109,8 @@ begin
 	DIGIT_ANODE <="1111";
 	if anode_enable(conv_integer(s)) ='1' then
 	DIGIT_ANODE(conv_integer(s)) <= '0';
+	else
+	DIGIT_ANODE <= "1111";
 	end if;
 	end process;
  

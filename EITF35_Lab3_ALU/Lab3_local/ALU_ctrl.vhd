@@ -16,7 +16,8 @@ architecture behavioral of ALU_ctrl is
 
 -- SIGNAL DEFINITIONS HERE IF NEEDED
 type STATES is (
-				S0, S1, S2, S3, S4, S5,
+                
+				S_init, S0, S1, S2, S3, S4, S5,
 				S6, S7, S8
 				);
 signal current_state, next_state : STATES ; 
@@ -31,7 +32,7 @@ begin
 			begin
 		--	if rising_edge(clk) then	
     			if reset = '1' then
-			     	current_state <= S0;
+			     	current_state <= S_init;
 			else
 			if rising_edge(clk) then 
 			     if enter ='1' then              -- cannot use system clock!!! too many transistions!!
@@ -45,7 +46,13 @@ begin
 -- needs optimizations
 next_state_determination_logic : process( enter, sign, current_state )
 		begin
-			case current_state is 
+			case current_state is
+			    when S_init =>
+			    if enter ='1' then
+			    next_state <= S0;
+			    else
+			    next_state <= current_state;
+			    end if; 
 				when S0 =>
 				if enter = '1' then             -- state change occurs when "enter" is pressed.
 				next_state <= S1;

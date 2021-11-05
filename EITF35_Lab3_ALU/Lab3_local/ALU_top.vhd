@@ -101,21 +101,21 @@ reset_in <= reset;
    ---- to provide a clean signal out of a bouncy one coming from the push button
    ---- input(b_Enter) comes from the pushbutton; output(Enter) goes to the FSM 
    
-   ------- @ vnay01 :: Removing debouncers as the output of debouncers were not good HIGH..
+   ------- @ vnay01 :: Removing debouncers as the output of debouncers were not clear HIGH..
                     -- something to do with architecture.. will check later.
-   debouncer_enter: debouncer
-   port map ( clk          => clk,
-              reset        => reset,
-              button_in    => b_Enter,
-              button_out   => Enter
-            );
+--   debouncer_enter: debouncer
+--   port map ( clk          => clk,
+--              reset        => reset,
+--              button_in    => b_Enter,
+--              button_out   => Enter
+--            );
    
-    debouncer_sign: debouncer
-         port map ( clk          => clk,
-                    reset        => reset,
-                    button_in    => b_sign,
-                    button_out   => Sign
-                       );
+--    debouncer_sign: debouncer
+--         port map ( clk          => clk,
+--                    reset        => reset,
+--                    button_in    => b_sign,
+--                    button_out   => Sign
+--                       );
     
 --        debouncer_reset: debouncer
 --         port map ( clk          => clk,
@@ -127,22 +127,23 @@ reset_in <= reset;
    -- ****************************
    -- DEVELOPE THE STRUCTURE OF ALU_TOP HERE
    -- ****************************
-   Enter_edge_detector : edge_detector
-   port map (
-                clk => clk,
-                reset => reset,
-                button_in => Enter,
-                button_out => edge_Enter
-                );
-   Sign_edge_detector : edge_detector
-   port map (
-                clk => clk,
-                reset => reset,
-                button_in => Sign,
-                button_out => edge_sign
-                );
+--   Enter_edge_detector : edge_detector
+--   port map (
+--                clk => clk,
+--                reset => reset,
+--                button_in => b_Enter,
+--                button_out => edge_Enter
+--                );
+--   Sign_edge_detector : edge_detector
+--   port map (
+--                clk => clk,
+--                reset => reset,
+--                button_in => b_sign,
+--                button_out => edge_sign
+--                );
    -- no changes in state --- maybe because reset is always active!!
-   -- Lets use falling edge of reset as global reset
+   -- Lets use falling edge of reset as global reset 
+   -- did not affect anything!
 --reset_edge_detector : edge_detector
 --   port map (
 --                clk => clk,
@@ -154,8 +155,8 @@ reset_in <= reset;
    port map (
                clk => clk,
                reset => reset_in,
-               enter => edge_Enter,          -- connected to out of debouncer
-               sign => edge_sign,
+               enter => b_Enter,          -- connected to out of debouncer
+               sign => b_sign,
                FN => FN_ctrl,
                RegCtrl => RegCtrl_signal
                );

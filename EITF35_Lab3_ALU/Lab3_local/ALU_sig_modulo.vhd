@@ -158,7 +158,7 @@ begin
 
    end process;
    
-   -- process to update result register
+   -- process to update result register     -- always updates the result folder with 
    process(FN, sum, sub, mod3_out_result)
    begin
     case FN is
@@ -180,11 +180,11 @@ begin
         when "1100" =>
         result <= mod3_out_result(7 downto 0);
         
-        when "1111" =>                         -- check the state of FSM from display. Only active for testing
-        result <= (others => '1');
+--        when "1111" =>                         -- check the state of FSM from display. Only active for testing
+--        result <= (others => '1');
         
         when others =>
-        result <= (others => '0'); 
+        result <= "00000000";                   -- default value to be displayed on 7 segment "-"
         end case;
         
 end process;  
