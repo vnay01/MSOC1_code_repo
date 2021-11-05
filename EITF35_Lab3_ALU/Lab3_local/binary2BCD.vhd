@@ -7,7 +7,7 @@ use ieee.numeric_std.all;
 --use work.ALU_components_pack.all;
 
 entity binary2BCD is
-   generic ( WIDTH : integer := 8   -- 8 bit binary to BCD
+   generic ( WIDTH : integer  -- 8 bit binary to BCD
            );
    port ( 
             binary_in : in  std_logic_vector(WIDTH-1 downto 0);  -- binary input width
@@ -28,16 +28,19 @@ begin
 	for i in 0 to 17 loop
 	z(i) := '0';
 	end loop;
-	z(10 downto 3) := binary_in;
+	z(10 downto 3) := binary_in;       -- sample input binary number 8 bits -- comes from result
 	 for i in 0 to 4 loop
-	 if z(11 downto 8) > 4 then
+	   if z(15 downto 12 ) > 4 then
+		z(15 downto 12 ) := z(15 downto 12) +3;
+		end if; 
+	   if z(11 downto 8) > 4 then
 		z(11 downto 8) := z(11 downto 8) +3;
 		end if;
-		if z(15 downto 12 ) > 4 then
-			z(15 downto 12 ) := z(15 downto 12) +3;
-			end if;
-			z(17 downto 1) := z(16 downto 0);
-			end loop;
+--        if z(7 downto 4) > 4 then
+--        z(7 downto 4) := z(7 downto 4) + 3;
+--        end if;
+	   z(17 downto 1) := z(16 downto 0);           -- shifting left
+	end loop;
 			BCD_out <= z(17 downto 8);
 	end process bcd1;
 end beh;

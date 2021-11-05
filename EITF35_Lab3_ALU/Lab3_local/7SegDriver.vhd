@@ -26,16 +26,20 @@ signal display_digit : std_logic_vector(3 downto 0) ; -- digit to be displayed ;
 signal anode_enable : std_logic_vector(3 downto 0); -- enables anode of the segment which needs to be displayed.
 signal clkdiv : std_logic_vector(20 downto 0) ; -- will be used to produce a refresh rate of 16 ms.
 --signal displayed_number : std_logic_vector(15 downto 0);
+--signal sel : std_logic_vector(1 downto 0) ;             -- testing for counter
 
 begin
-	s <= clkdiv(20 downto 19);           -- just for testing
+--	s <= clkdiv(25 downto 24);           -- just for testing
 	anode_enable <= "1111";
 	sign_overflow <= (sign & overflow);
 	
 	
 	-- process to select the segment of display which is to be activated
-	segement_selection: process(s, BCD_digit, sign_overflow)
+	segement_selection: process(s, BCD_digit, sign_overflow, reset)
 			begin
+			if reset ='1' then
+			 display_digit <= "1111";                -- display ' ---- '
+			 else
 				case s is
 					when "00" =>
 					display_digit <= BCD_digit(3 downto 0);
@@ -43,20 +47,21 @@ begin
 					display_digit <= BCD_digit(7 downto 4);
 					when "10" =>
 					display_digit <= ("00" & BCD_digit(9 downto 8));
-					when others =>
-					if sign_overflow ="00" then
-					display_digit <= ("11" & sign_overflow);	-- 1100	  -- so display a blank -- append 11 to the MSB so there is no collission with BCD representation
-                    elsif sign_overflow = "01" then
-                    display_digit <= ("11" & sign_overflow);        -- 1101     -- show F
-                    elsif sign_overflow = "10" then
-                    display_digit <= ("11" & sign_overflow);        -- 1110     -- show sign
-                    elsif sign_overflow = "11" then 
-                    display_digit <= ("11" & sign_overflow);        -- 1111     -- never occurs  - so display a blank
-                    end if;
-                   
---					when others=>                                          --is it required!!?
---					display_digit <= (others => '0');
+					when "11" =>
+					display_digit <= ("00" & sign_overflow);
+--					if sign_overflow ="00" then
+--					display_digit <= ("11" & sign_overflow);	    -- 1100	    -- so display a blank -- append 11 to the MSB so there is no collission with BCD representation
+--                    elsif sign_overflow = "01" then
+--                    display_digit <= ("11" & sign_overflow);        -- 1101     -- show F
+--                    elsif sign_overflow = "10" then
+--                    display_digit <= ("11" & sign_overflow);        -- 1110     -- show sign
+--                    elsif sign_overflow = "11" then 
+--                    display_digit <= ("11" & sign_overflow);        -- 1111     -- never occurs  - so display a blank
+--                    end if;
+					when others=>                                          --is it required!!?
+					display_digit <= "1111";                -- display ' ---- '
 					end case;
+					end if;
 			end process;
 			
 -- process to switch ON LED pattern of the digits.
@@ -89,10 +94,12 @@ segment_led_pattern : process(display_digit)
 	SEGMENT <= "0111111";
 	when "1101" =>
 	SEGMENT <= "0001110";				-- when overflow occurs 'F'
+	when "1011" =>
+	SEGMENT <= "0111111";          -- display a -
 	when "1111" =>
-	SEGMENT <= "1111111";          -- display a blank
+	SEGMENT <= "1111111";
     when others=>
-    SEGMENT <= "1111111"; -- switch off for other values.
+    SEGMENT <= "1111111";       -- switch off for other values.
    end case;
  end process;
  
@@ -102,6 +109,8 @@ begin
 	DIGIT_ANODE <="1111";
 	if anode_enable(conv_integer(s)) ='1' then
 	DIGIT_ANODE(conv_integer(s)) <= '0';
+	else
+	DIGIT_ANODE <= "1111";
 	end if;
 	end process;
  
@@ -116,6 +125,24 @@ begin
 	clkdiv <= clkdiv + 1;
 	end if;
 	end process;
-	
+
+-- process to select switch combinations
+
+process(clkdiv)
+begin
+    case clkdiv(20 downto 19) is
+    when "00" =>
+    s <= "00";
+    when "01" =>
+    s <= "01";
+    when "10" =>
+    s <= "10";
+    when "11" =>
+    s <= "11";
+    when others =>
+    s <=(others => '0');
+    end case;
+ end process;
+
 
 end behavioral;
