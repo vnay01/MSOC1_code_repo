@@ -6,8 +6,7 @@ use work.ALU_components_pack.all;
 
 entity ALU_top is
    port ( clk        : in  std_logic;
---          btnU       : in  std_logic;
-          reset      : in std_logic;
+          reset      : in  std_logic;
           b_Enter    : in  std_logic;
           b_Sign     : in  std_logic;
           input      : in  std_logic_vector(7 downto 0);
@@ -19,10 +18,6 @@ end ALU_top;
 architecture structural of ALU_top is
 
 -- component declarations
-
--- output of debouncer is not clear HIGH...!!!
-
-
 component ALU_ctrl is
    port ( clk     : in  std_logic;
           reset   : in  std_logic;  -- connected to CPU reset button on FPGA board
@@ -55,10 +50,9 @@ end component;
 
 -- binary2BCD converter
 component binary2BCD is
-   generic ( WIDTH : integer  -- 8 bit binary to BCD
+   generic ( WIDTH : integer := 8   -- 8 bit binary to BCD
            );
-   port (  
-          binary_in : in  std_logic_vector(WIDTH-1 downto 0);  -- binary input width
+   port ( binary_in : in  std_logic_vector(WIDTH-1 downto 0);  -- binary input width
           BCD_out   : out std_logic_vector(9 downto 0)        -- BCD output, 10 bits [2|4|4] to display a 3 digit BCD value when input has length 8
         );
 end component;
@@ -76,23 +70,21 @@ component seven_seg_driver is
 end component;
 
    -- SIGNAL DEFINITIONS
-   signal Enter, Sign, edge_Enter, edge_sign, edge_reset: std_logic;
+   signal Enter, Sign : std_logic;
    signal FN_ctrl : std_logic_vector(3 downto 0) ;
    signal RegCtrl_signal : std_logic_vector(1 downto 0);
    signal A_input, B_input : std_logic_vector( 7 downto 0 );
    
    -- signals for testing
-   signal tb_result : std_logic_vector ( 7 downto 0) ;
-   signal tb_overflow, tb_sign : std_logic;
-   signal tb_bcd_out : std_logic_vector(9 downto 0);
+   signal tb_result : std_logic_vector ( 7 downto 0) := (others => '0') ;
+   signal tb_overflow, tb_sign : std_logic := '0';
+   signal tb_bcd_out : std_logic_vector(9 downto 0) := "0000000000";
 --   signal board_DIGIT_ANODE : std_logic_vector(3 downto 0) := "1111";
 --   signal board_SEGMENT : std_logic_vector( 6 downto 0) := "1111111";
-    signal reset_in : std_logic;
    
 
 begin
 
-reset_in <= reset;
     -- On - board buttons connections
   
     
@@ -100,63 +92,30 @@ reset_in <= reset;
     
    ---- to provide a clean signal out of a bouncy one coming from the push button
    ---- input(b_Enter) comes from the pushbutton; output(Enter) goes to the FSM 
+   debouncer1: debouncer
+   port map ( clk          => clk,
+              reset        => reset,
+              button_in    => b_Enter,
+              button_out   => Enter
+            );
    
-   ------- @ vnay01 :: Removing debouncers as the output of debouncers were not clear HIGH..
-                    -- something to do with architecture.. will check later.
---   debouncer_enter: debouncer
---   port map ( clk          => clk,
---              reset        => reset,
---              button_in    => b_Enter,
---              button_out   => Enter
---            );
-   
---    debouncer_sign: debouncer
---         port map ( clk          => clk,
---                    reset        => reset,
---                    button_in    => b_sign,
---                    button_out   => Sign
---                       );
-    
---        debouncer_reset: debouncer
---         port map ( clk          => clk,
---                    reset        => ,
---                    button_in    => reset,
---                    button_out   => reset_in
---                       );
+    debouncer_sign: debouncer
+         port map ( clk          => clk,
+                    reset        => reset,
+                    button_in    => b_sign,
+                    button_out   => Sign
+                       );
 
    -- ****************************
    -- DEVELOPE THE STRUCTURE OF ALU_TOP HERE
    -- ****************************
---   Enter_edge_detector : edge_detector
---   port map (
---                clk => clk,
---                reset => reset,
---                button_in => b_Enter,
---                button_out => edge_Enter
---                );
---   Sign_edge_detector : edge_detector
---   port map (
---                clk => clk,
---                reset => reset,
---                button_in => b_sign,
---                button_out => edge_sign
---                );
-   -- no changes in state --- maybe because reset is always active!!
-   -- Lets use falling edge of reset as global reset 
-   -- did not affect anything!
---reset_edge_detector : edge_detector
---   port map (
---                clk => clk,
---                reset => reset,
---                button_in => reset_in,
---                button_out => edge_reset
---                );
+   
    ALU_Controller: ALU_ctrl
    port map (
                clk => clk,
-               reset => reset_in,
-               enter => b_Enter,          -- connected to out of debouncer
-               sign => b_sign,
+               reset => reset,
+               enter => Enter,          -- connected to out of debouncer
+               sign => Sign,
                FN => FN_ctrl,
                RegCtrl => RegCtrl_signal
                );
@@ -164,7 +123,7 @@ reset_in <= reset;
    register_update: regUpdate
     port map (
                 clk => clk,
-                reset => reset_in,
+                reset => reset,
                 RegCtrl => RegCtrl_signal,
                 input => input,                   -- from Switch positions ( XDC file )
                 A => A_input,
@@ -182,7 +141,6 @@ reset_in <= reset;
                 );
        
    Bin2BCD_block : binary2BCD
-   generic map (WIDTH => 8)
    port map (
                binary_in => tb_result,
                BCD_out => tb_bcd_out
@@ -190,7 +148,7 @@ reset_in <= reset;
 seg: seven_seg_driver
    port map ( 
           clk => clk,
-          reset => reset_in,
+          reset => reset,
           BCD_digit => tb_bcd_out,          
           sign  => tb_sign,
           overflow  => tb_overflow,

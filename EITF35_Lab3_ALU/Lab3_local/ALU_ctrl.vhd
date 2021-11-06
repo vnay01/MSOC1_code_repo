@@ -16,8 +16,7 @@ architecture behavioral of ALU_ctrl is
 
 -- SIGNAL DEFINITIONS HERE IF NEEDED
 type STATES is (
-                
-				S_init, S0, S1, S2, S3, S4, S5,
+				S0, S1, S2, S3, S4, S5,
 				S6, S7, S8
 				);
 signal current_state, next_state : STATES ; 
@@ -28,33 +27,25 @@ begin
 
    -- DEVELOPE YOUR CODE HERE
    -- process to update current state
-   state_transition : process(reset, enter, clk)
+   state_transition : process(clk, reset, sign)
 			begin
 		--	if rising_edge(clk) then	
     			if reset = '1' then
-			     	current_state <= S_init;
+			     	current_state <= S0;
 			else
-			if rising_edge(clk) then 
-			     if enter ='1' then              -- cannot use system clock!!! too many transistions!!
+			if rising_edge(clk) then
 			current_state <= next_state;
-			 end if;
 			end if;
 			end if;
 			end process;
 
 -- process below implements logic to determine state transitions
 -- needs optimizations
-next_state_determination_logic : process( enter, sign, current_state )
+next_state_determination_logic : process( enter, current_state, sign )
 		begin
-			case current_state is
-			    when S_init =>
-			    if enter ='1' then
-			    next_state <= S0;
-			    else
-			    next_state <= current_state;
-			    end if; 
+			case current_state is 
 				when S0 =>
-				if enter = '1' then             -- state change occurs when "enter" is pressed.
+				if enter = '1' then
 				next_state <= S1;
 				else
 				next_state <= current_state;
@@ -64,7 +55,6 @@ next_state_determination_logic : process( enter, sign, current_state )
 				if enter = '1' then
 				next_state <= S2;
 				else
---				elsif falling_edge(enter) then
 				next_state <= current_state;
 				end if;
 				
@@ -75,8 +65,7 @@ next_state_determination_logic : process( enter, sign, current_state )
     				else
     				next_state <= S6;
     				end if;
---				elsif falling_edge(enter) then
-                else
+				else
 				next_state <= current_state;
 				end if;
 				
@@ -87,8 +76,7 @@ next_state_determination_logic : process( enter, sign, current_state )
 				    else
 				    next_state <= S7;
 				    end if;
---				elsif falling_edge(enter) then
-                else
+				else
 				next_state <= current_state;
 				end if;
 				
@@ -99,8 +87,7 @@ next_state_determination_logic : process( enter, sign, current_state )
 				    else
 				    next_state <= S8;
 				    end if;
---				elsif falling_edge(enter) then
-                else
+				else
 				next_state <= current_state;
 				end if;
 				
@@ -111,8 +98,7 @@ next_state_determination_logic : process( enter, sign, current_state )
     				else
     				next_state <= S3;
     				end if;
---				elsif falling_edge(enter) then
-                else
+				else
 				next_state <= current_state;
 				end if;
 				
@@ -123,8 +109,7 @@ next_state_determination_logic : process( enter, sign, current_state )
     				else
     				next_state <= S4;
     				end if;   			
---				elsif falling_edge(enter) then
-                else
+				else
 				next_state <= current_state;
 				end if;
 				
@@ -135,8 +120,7 @@ next_state_determination_logic : process( enter, sign, current_state )
     				else
     				next_state <= S5;
     				end if;
---				elsif falling_edge(enter) then
-                else
+				else
 				next_state <= current_state;
 				end if;
 				
@@ -147,33 +131,27 @@ next_state_determination_logic : process( enter, sign, current_state )
     				else
     				next_state <= S3;
     				end if;
-    				else
---				elsif falling_edge(enter) then
+				else
 				next_state <= current_state;
 				end if;
 			end case;
 		end process;
-
 --process to generate ALU operation signals
-
 -- will be optimized further to use less states and registers.
-ALU_operation: process(current_state, sign , enter, clk)
+ALU_operation: process(current_state, sign , enter)
 			begin	
-	--		FN <= "1111";
-	if rising_edge(clk) then
-		case current_state is 
+			FN <= "1111";
+			case current_state is 
 			when S0 =>
 			if enter = '1' then
 			FN <= "0000";			-- sample A
---			elsif falling_edge(enter) then
-            else
+			else
 			FN <= "1111";
 			end if;
 			
 			when S1 =>
 			if enter = '1' then
 			FN <= "0001";			-- sample B
---			elsif falling_edge(enter) then
 			else
 			FN <= "1111";
 			end if;
@@ -185,8 +163,6 @@ ALU_operation: process(current_state, sign , enter, clk)
 			 else
 			 FN <= "0010";           -- unsigned A+B
 			 end if;
-			else
-			FN <= "1111";
 			 end if;
 			 
 			when S3 =>
@@ -196,10 +172,7 @@ ALU_operation: process(current_state, sign , enter, clk)
              else
              FN <= "0011";           -- unsigned A-B
              end if;
-             else
-             FN <= "1111";
              end if;
-             
 			when S4 =>
 			if enter = '1' then
              if sign = '1' then
@@ -207,8 +180,6 @@ ALU_operation: process(current_state, sign , enter, clk)
              else
              FN <= "0100";           -- unsigned Amod3
              end if;
-             else
-             FN <= "1111";
              end if;
 			
 			when S5 =>		
@@ -218,8 +189,6 @@ ALU_operation: process(current_state, sign , enter, clk)
              else
              FN <= "0010";           -- unsigned A+B
              end if;
-             else
-             FN <= "1111";
              end if;
 			
 			when S6 => 
@@ -229,8 +198,6 @@ ALU_operation: process(current_state, sign , enter, clk)
              else
              FN <= "0011";           -- unsigned A-B
              end if;
-             else
-             FN <= "1111";
              end if;
 
 			when S7 =>
@@ -240,8 +207,6 @@ ALU_operation: process(current_state, sign , enter, clk)
              else
              FN <= "0100";           -- unsigned Amod3
              end if;
-             else
-             FN <= "1111";
              end if;
 		
 			when S8 =>
@@ -251,16 +216,11 @@ ALU_operation: process(current_state, sign , enter, clk)
               else
               FN <= "0010";           -- unsigned A+B
               end if;
-              else
-              FN <= "1111";
               end if;
 
 			when others =>
---			if enter = '1' then
 			FN <= "1111";
---			end if;
 			end case;
-			end if;
 		end process;
 
 -- block below outputs register update control signals to ALU block.
