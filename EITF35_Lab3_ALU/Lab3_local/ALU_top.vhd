@@ -12,7 +12,7 @@ entity ALU_top is
           b_Sign     : in  std_logic;
           input      : in  std_logic_vector(7 downto 0);
           seven_seg  : out std_logic_vector(6 downto 0);
-          anode      : out std_logic_vector(3 downto 0)
+          anode      : out std_logic_vector(7 downto 0)
         );
 end ALU_top;
 
@@ -20,7 +20,7 @@ architecture structural of ALU_top is
 
 -- component declarations
 
--- output of debouncer is not clear HIGH...... during testing of course!!!
+-- output of debouncer is not clear HIGH...... during testing of-course!!!
 
 
 component ALU_ctrl is
@@ -88,11 +88,13 @@ end component;
 --   signal board_DIGIT_ANODE : std_logic_vector(3 downto 0) := "1111";
 --   signal board_SEGMENT : std_logic_vector( 6 downto 0) := "1111111";
     signal reset_in : std_logic;
+    signal anode_off : std_logic_vector(3 downto 0) := "1111";
    
 
 begin
 
---reset_in <= reset ;      
+reset_in <= not reset ; 
+anode(7 downto 4) <= anode_off;     
 
 -- uncomment blocks below for a fixed reset                    
 --reset_in <= '0' ;
@@ -110,24 +112,18 @@ begin
                     -- something to do with architecture.. will check later.
    debouncer_enter: debouncer
    port map ( clk          => clk,
-              reset        => reset,
+              reset        => reset_in,
               button_in    => b_Enter,
               button_out   => Enter
             );
    
     debouncer_sign: debouncer
          port map ( clk          => clk,
-                    reset        => reset,
+                    reset        => reset_in,
                     button_in    => b_Sign,
                     button_out   => Sign
                        );
     
---        debouncer_reset: debouncer
---         port map ( clk          => clk,
---                    reset        => ,
---                    button_in    => reset,
---                    button_out   => reset_in
---                       );
 
    -- ****************************
    -- DEVELOPE THE STRUCTURE OF ALU_TOP HERE
@@ -135,14 +131,14 @@ begin
    Enter_edge_detector : edge_detector
    port map (
                 clk => clk,
-                reset => reset,
+                reset => reset_in,
                 button_in => Enter,
                 button_out => edge_Enter
                 );
    Sign_edge_detector : edge_detector
    port map (
                 clk => clk,
-                reset => reset,
+                reset => reset_in,
                 button_in => Sign,
                 button_out => edge_sign
                 );
@@ -159,7 +155,7 @@ begin
    ALU_Controller: ALU_ctrl
    port map (
                clk => clk,
-               reset => reset,
+               reset => reset_in,
                enter => edge_Enter,          -- connected to out of debouncer
                sign => edge_sign,
                FN => FN_ctrl,
@@ -169,7 +165,7 @@ begin
    register_update: regUpdate
     port map (
                 clk => clk,
-                reset => reset,
+                reset => reset_in,
                 RegCtrl => RegCtrl_signal,
                 input => input,                   -- from Switch positions ( XDC file )
                 A => A_input,
@@ -195,11 +191,11 @@ begin
 seg: seven_seg_driver
    port map ( 
           clk => clk,
-          reset => reset,
+          reset => reset_in,
           BCD_digit => tb_bcd_out,          
           sign  => tb_sign,
           overflow  => tb_overflow,
-          DIGIT_ANODE => anode,
+          DIGIT_ANODE => anode(3 downto 0),
           SEGMENT   => seven_seg
         );
    

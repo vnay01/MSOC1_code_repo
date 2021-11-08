@@ -75,6 +75,134 @@ begin
 			end if;
 			end process;
 
+---- process below implements logic to determine state transitions
+---- needs optimizations
+--next_state_determination_logic : process( current_state, enter_buffer, sign_buffer )
+------- need to model sign press as a latch switch.
+--		begin
+--		  next_state <= current_state ;            -- current state is maintained until a change in state is enforced
+--		  RegCtrl_buffer <= "01";
+--			case current_state is
+--			    when state_init =>					-- reset state  -- displays -000
+--			    next_state <= state_init;            -- remain in reset until enter is presed
+--			    FN_next <= "0000";						-- testing for state transition -- should display -014
+--				if enter_buffer ='1' then		-- goto state sample_A
+--				RegCtrl_buffer <= "00";					-- send sampling signal to RegUpdate
+--			    next_state <= sample_A;
+--				FN_next <= "0001";         				-- generates RegCtrl "00" to update A with input.
+--				end if;
+				
+--				when sample_A =>								-- sample A
+--				FN_next <= "0001";                          -- display the value of A until enter is pressed.
+--				if enter_buffer = '1' then             	-- state change occurs when "enter" is pressed.
+--				RegCtrl_buffer <= "11";					-- send register update signal for sampling B
+--				next_state <= sample_B;
+--				FN_next <= "0010";							-- generates RegCtrl "11" to update B with input
+--				end if;
+				
+--				when sample_B =>					-- Sample B
+--				FN_next <="0010";                   -- display the value of B until enter is pressed.
+--				RegCtrl_buffer <= "01";
+--				next_state <= current_state ;
+--				if enter_buffer = '1' then
+--				next_state <= uns_AplusB;           -- move to unsigned A+B
+--				FN_next <= "0011";                  --- control signal to update result register with A+B
+--				end if;
+--				if sign_buffer ='1' then            
+--				next_state <= sign_AplusB;          -- move to signed A+B
+--				FN_next <= "1010";                  -- control signal to update result with signed A+B
+--				end if;
+
+				
+--				when uns_AplusB =>					-- unsigned A+B
+--				FN_next <= "0010";					-- display uns A + B
+--				next_state <= current_state ;
+--				if enter_buffer = '1' then            
+--    				next_state <= uns_AminusB;      -- move to unsigned A-B
+--					FN_next <= "0011";              -- control signal to update result register with unsigned A-B
+--				end if;
+--    			if sign_buffer ='1' then
+--    			    next_state <= sign_AplusB;      -- move to signed A+B
+--				    FN_next <= "1010";              -- control signal to update result register with signed A+B
+--    				end if;
+
+				
+--				when uns_AminusB =>					-- unsigned A-B
+--				 FN_next <= "0011" ; 				-- display uns A-B
+--				 next_state <= current_state ; 
+--				if enter_buffer = '1' then
+--				    next_state <= uns_Amod3;        -- move to unsigned Amod3
+--					FN_next <= "0100";              -- control signal to update result register with unsigned Amod3
+--				    end if;
+--				 if sign_buffer ='1' then
+--				    next_state <= sign_AminusB;     -- move to signed Amod3.
+--					FN_next <= "1011";              -- control signal to update result register with signed A-B
+--				    end if;
+				
+--				when uns_Amod3 =>					-- unsigned Amod3
+--				 FN_next <= "0100" ; 			    -- display uns Amod3
+--				next_state <= current_state ;
+--				if enter_buffer = '1' then
+--    			    next_state <= uns_AplusB;       -- move to unsigned A+B
+--					FN_next <= "0010";              -- control signal to update result register with unsigned A+B
+--				 end if;
+--				 if sign_buffer ='1' then
+--				    next_state <= sign_Amod3;       -- move to signed Amod3
+--					FN_next <= "1100";              -- control signal to update result register with signed Amod3
+--				    end if;
+
+
+				
+--				when sign_AplusB =>					-- signed A+B
+--				FN_next <= "1010";
+--				next_state <= current_state ;
+--				if enter_buffer = '1' then
+--    				next_state <= sign_AminusB;     -- move to signed A-B
+--					FN_next <= "1011";              -- control signal to update result register with signed A-B
+--					end if;
+--    			if sign_buffer ='1' then
+--    				next_state <= uns_AplusB;       -- move to unsigned A+B
+--					FN_next <= "0010";              -- control signal to update result register with unsigned A+B
+--    				end if;
+				
+--				when sign_AminusB =>				-- signed A-B
+--				FN_next<="1011";
+--				next_state <= current_state ;
+--				if enter_buffer = '1' then
+--    				next_state <= sign_Amod3;       -- move to signed Amod3
+--					FN_next <= "1100" ;             -- control signal to update result register with signed Amod3
+--					end if;
+--                if sign_buffer ='1' then
+--    				next_state <= uns_AminusB;     -- move to unsigned A-B
+--					FN_next <="0011";              -- control signal to update result register with unsigned A-B
+--    				end if;   			
+				
+--				when sign_Amod3 =>				   -- signed Amod3
+--				FN_next <= "1100";
+--				next_state <= current_state ;
+--				if enter_buffer = '1' then
+--    				next_state <= sign_AplusB;     -- move to signed A+B
+--					FN_next <= "1100";             -- control signal to update result register with signed A+B
+--					end if;
+--					if sign_buffer ='1' then
+--    				next_state <= uns_Amod3;       -- move to unsigned Amod3
+--					FN_next <= "0100";             -- control signal to update result register with unsigned Amod3
+--    				end if;
+
+--				when others =>
+--                    FN_next <= "1101";
+--				next_state <= current_state ;
+--				if enter_buffer = '1' then
+--				    next_state <= current_state;
+--				    RegCtrl_buffer <="10";
+--				end if;
+--				if sign_buffer = '1' then
+--				    next_state <= current_state;
+--                    RegCtrl_buffer <= "10";
+                    
+--				end if;
+--			end case;
+--		end process;
 
 -- process below implements logic to determine state transitions
 -- needs optimizations

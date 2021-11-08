@@ -48,7 +48,7 @@ begin
 					when "10" =>
 					display_digit <= ("00" & BCD_digit(9 downto 8));
 					when "11" =>
-					display_digit <= ("11" & sign_overflow);   -- possible comb. [0000] , [0001] - Overflow ; [0010] - sign is negative ; [0011] (-127 - 128) 
+					display_digit <= ("11" & sign_overflow);   -- possible comb. [1100] , [1101] - Overflow ; [1110] - sign is negative ; [1111] (-127 - 128) 
 					when others=>                                          --is it required!!?
 					display_digit <= "1111";                -- display ' ---- '
 					end case;
@@ -102,8 +102,8 @@ begin
 	DIGIT_ANODE <="1111";
 	if anode_enable(conv_integer(s)) ='1' then
 	DIGIT_ANODE(conv_integer(s)) <= '0';
---	else
---	DIGIT_ANODE <= "1111";
+	else
+	DIGIT_ANODE <= "1111";
 	end if;
 	end process;
  
