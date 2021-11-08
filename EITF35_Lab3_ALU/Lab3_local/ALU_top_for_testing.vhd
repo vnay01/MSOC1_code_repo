@@ -4,7 +4,12 @@ use ieee.std_logic_1164.all;
 library work;
 use work.ALU_components_pack.all;
 
-entity ALU_top is
+-- use this for testbench.
+-- Functionally same as ALU_top with the exception of removing debouncers 
+-- Using debouncers in testbench were causing no clear output( because of debounce counters not able to complete counting )
+-- 
+
+entity ALU_top_for_test is
    port ( clk        : in  std_logic;
 --          btnU       : in  std_logic;
           reset      : in std_logic;
@@ -14,13 +19,13 @@ entity ALU_top is
           seven_seg  : out std_logic_vector(6 downto 0);
           anode      : out std_logic_vector(3 downto 0)
         );
-end ALU_top;
+end ALU_top_for_test;
 
-architecture structural of ALU_top is
+architecture structural of ALU_top_for_test is
 
 -- component declarations
 
--- output of debouncer is not clear HIGH...... during testing of course!!!
+-- output of debouncer is not clear HIGH...!!!
 
 
 component ALU_ctrl is
@@ -92,7 +97,7 @@ end component;
 
 begin
 
---reset_in <= reset ;      
+reset_in <= reset ;      
 
 -- uncomment blocks below for a fixed reset                    
 --reset_in <= '0' ;
@@ -108,19 +113,19 @@ begin
    
    ------- @ vnay01 :: Removing debouncers as the output of debouncers were not clear HIGH..
                     -- something to do with architecture.. will check later.
-   debouncer_enter: debouncer
-   port map ( clk          => clk,
-              reset        => reset,
-              button_in    => b_Enter,
-              button_out   => Enter
-            );
+   -- debouncer_enter: debouncer
+   -- port map ( clk          => clk,
+              -- reset        => reset_in,
+              -- button_in    => b_Enter,
+              -- button_out   => Enter
+            -- );
    
-    debouncer_sign: debouncer
-         port map ( clk          => clk,
-                    reset        => reset,
-                    button_in    => b_Sign,
-                    button_out   => Sign
-                       );
+    -- debouncer_sign: debouncer
+         -- port map ( clk          => clk,
+                    -- reset        => reset_in,
+                    -- button_in    => b_sign,
+                    -- button_out   => Sign
+                       -- );
     
 --        debouncer_reset: debouncer
 --         port map ( clk          => clk,
@@ -135,15 +140,15 @@ begin
    Enter_edge_detector : edge_detector
    port map (
                 clk => clk,
-                reset => reset,
-                button_in => Enter,
+                reset => reset_in,
+                button_in => b_Enter,
                 button_out => edge_Enter
                 );
    Sign_edge_detector : edge_detector
    port map (
                 clk => clk,
-                reset => reset,
-                button_in => Sign,
+                reset => reset_in,
+                button_in => b_sign,
                 button_out => edge_sign
                 );
    -- no changes in state --- maybe because reset is always active!!
@@ -159,9 +164,9 @@ begin
    ALU_Controller: ALU_ctrl
    port map (
                clk => clk,
-               reset => reset,
-               enter => edge_Enter,          -- connected to out of debouncer
-               sign => edge_sign,
+               reset => reset_in,
+               enter => b_Enter,          -- connected to out of debouncer
+               sign => b_sign,
                FN => FN_ctrl,
                RegCtrl => RegCtrl_signal
                );
@@ -169,7 +174,7 @@ begin
    register_update: regUpdate
     port map (
                 clk => clk,
-                reset => reset,
+                reset => reset_in,
                 RegCtrl => RegCtrl_signal,
                 input => input,                   -- from Switch positions ( XDC file )
                 A => A_input,
@@ -195,7 +200,7 @@ begin
 seg: seven_seg_driver
    port map ( 
           clk => clk,
-          reset => reset,
+          reset => reset_in,
           BCD_digit => tb_bcd_out,          
           sign  => tb_sign,
           overflow  => tb_overflow,

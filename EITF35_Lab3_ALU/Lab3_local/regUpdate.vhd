@@ -1,3 +1,7 @@
+--- DO NOT TOUCH ---
+--- Works ---
+
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -14,7 +18,10 @@ end regUpdate;
 
 architecture behavioral of regUpdate is
 
+
+
 -- SIGNAL DEFINITIONS HERE IF NEEDED
+signal input_register_buffer : std_logic_vector(7 downto 0);
 
 begin
 
@@ -22,21 +29,25 @@ begin
    -- process to determine which registers needs to be updated based on RegCtrl signal.
    process( clk, RegCtrl, reset )
    begin
-   if reset = '1' then
+   if rising_edge(clk) then
+   if reset = '1' then          -- for testing, reset is set to '0' in ALU _top level design
 	A <= "00000000";
 	B <= "00000000";
-	elsif rising_edge(clk) then
+	else
+	input_register_buffer <= input;
 			case RegCtrl is
 			when "00" =>
+			
 		--	if RegCtrl = "00" then
-			A <= input;
+			A <= input_register_buffer;
 		--	elsif RegCtrl = "01" then
-			when "01" =>
-			B <= input;
+			when "11" =>
+			B <= input_register_buffer;
 		--	end if;
 			when others =>
 				null;
 			end case;
+		 end if;
 		 end if;
 	end process;
 end behavioral;

@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
 
 entity modulo3 is 
-    generic( const_comparator : integer := 192
+    generic( const_comparator : integer
                 );
 	port ( 
 			x : in std_logic_vector(7 downto 0) ;
@@ -24,10 +24,10 @@ architecture beh of modulo3 is
 begin
 -- sample input number into a register
 	x_internal <= x;
-	compare_value <= 192;
+	compare_value <= const_comparator;
 	internal_sub_register <= std_logic_vector(to_unsigned(compare_value, compare_val_uns'length));
 	
-	compare: process(x_internal)
+	compare: process(x_internal, internal_sub_register)
 	begin
 	   if unsigned(x_internal) >= unsigned(internal_sub_register) then
 	   mux_out <= std_logic_vector(unsigned(x_internal)- unsigned(internal_sub_register));

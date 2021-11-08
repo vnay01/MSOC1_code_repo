@@ -37,8 +37,8 @@ begin
 	-- process to select the segment of display which is to be activated
 	segement_selection: process(s, BCD_digit, sign_overflow, reset)
 			begin
-			if reset ='1' then
-			 display_digit <= "1111";                -- display ' ---- '
+			if reset ='1' then                       -- for testing, reset is set to '0' in ALU _top level design
+			 display_digit <= "1100";                -- display ' F '
 			 else
 				case s is
 					when "00" =>
@@ -48,16 +48,7 @@ begin
 					when "10" =>
 					display_digit <= ("00" & BCD_digit(9 downto 8));
 					when "11" =>
-					display_digit <= ("00" & sign_overflow);
---					if sign_overflow ="00" then
---					display_digit <= ("11" & sign_overflow);	    -- 1100	    -- so display a blank -- append 11 to the MSB so there is no collission with BCD representation
---                    elsif sign_overflow = "01" then
---                    display_digit <= ("11" & sign_overflow);        -- 1101     -- show F
---                    elsif sign_overflow = "10" then
---                    display_digit <= ("11" & sign_overflow);        -- 1110     -- show sign
---                    elsif sign_overflow = "11" then 
---                    display_digit <= ("11" & sign_overflow);        -- 1111     -- never occurs  - so display a blank
---                    end if;
+					display_digit <= ("11" & sign_overflow);   -- possible comb. [0000] , [0001] - Overflow ; [0010] - sign is negative ; [0011] (-127 - 128) 
 					when others=>                                          --is it required!!?
 					display_digit <= "1111";                -- display ' ---- '
 					end case;
@@ -88,16 +79,18 @@ segment_led_pattern : process(display_digit)
     SEGMENT <= "0000000";    --8
     when "1001" =>
     SEGMENT <= "0010000";    --9
-    when "1100" =>
-    SEGMENT <= "1111111";          -- display a blank
-	when "1110" =>					-- when sign is '-'
-	SEGMENT <= "0111111";
+--    when "1010" =>
+--    SEGMENT <= "1111111";          -- display a blank
+--	when "1011" =>					-- when sign is '-'
+--	SEGMENT <= "0111111";
+	when "1100" =>
+	SEGMENT <= "1111111";				-- when no overflow or negative numbers
 	when "1101" =>
-	SEGMENT <= "0001110";				-- when overflow occurs 'F'
-	when "1011" =>
-	SEGMENT <= "0111111";          -- display a -
-	when "1111" =>
-	SEGMENT <= "1111111";
+	SEGMENT <= "0001110";          -- overflow occurs - Show F
+	when "1110" =>
+	SEGMENT <= "0111111";          -- no overflow but result is negative :: display '-'
+	when "1111"=>                   -- both overflow occurs and result is negative :: display E
+	SEGMENT <="0000110";               --display E
     when others=>
     SEGMENT <= "1111111";       -- switch off for other values.
    end case;
@@ -109,8 +102,8 @@ begin
 	DIGIT_ANODE <="1111";
 	if anode_enable(conv_integer(s)) ='1' then
 	DIGIT_ANODE(conv_integer(s)) <= '0';
-	else
-	DIGIT_ANODE <= "1111";
+--	else
+--	DIGIT_ANODE <= "1111";
 	end if;
 	end process;
  
