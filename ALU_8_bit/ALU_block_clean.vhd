@@ -97,14 +97,16 @@ begin
 		sum <= (others =>'0');
 		if A>=B then
 		sub <= std_logic_vector((unsigned('0' & A) ) - ( unsigned('0' & B)));
+		ovf <= '0';
 		-- case of A < B
 	    else
 	    sub<=std_logic_vector((unsigned('0' & B))-(unsigned('0' & A)));
+	    ovf <= '1';
 	    end if;	
 		mod3_out_result <= (others => '0');
 		internal_result_register<= sub;
 
-		ovf <= '0';
+--		ovf <= '0';
 		sign_f <= '0';
 		bit9_result <=(others => '0');
  
@@ -129,7 +131,7 @@ begin
          
          bit9_result <= std_logic_vector(signed(A(7) & A) + signed(B(7) & B));                   -- stores result as 9 bits          
        
-         if signed(bit9_result) <  to_signed(-255, 9) or signed(bit9_result) >  to_signed(255, 9) then
+         if signed(bit9_result) <  to_signed(-255, 9) or signed(bit9_result) >  to_signed(255, 9) then  -- Do you understand this section completely?
             ovf <= '1';
             sign_f <= bit9_result(8);
          end if;
