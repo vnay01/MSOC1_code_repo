@@ -1,0 +1,45 @@
+// VerilogA for VerilogALab, FreqMeter, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+nature Frequency
+	abstol =1m;
+	access= FF;
+	units="Hz";
+endnature
+
+discipline freq_current
+	potential Frequency;
+	flow Current;
+enddiscipline
+
+module FreqMeter(vp,vn,fout);
+	electrical vp,vn; //vp,vn input ports
+	freq_current fout;
+	parameter integer log_to_file =0;
+//define local variables here
+	
+analog begin
+/*	@(initial_step)begin
+		if(log_to_file)begin
+		file1 = $fopen("file1.dat");
+			//create the open file statements here
+	  end
+	end
+*/
+	@(cross(V(vp,vn),+1))		// gets triggered whenever vp and vn rise from 0
+	
+
+//	if(log_to_file) begin
+	
+
+	end
+	
+
+
+//	fout <+x;
+end
+
+
+
+endmodule
