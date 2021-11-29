@@ -1,0 +1,30 @@
+// VerilogA for ahdlLib, DAC5bit, veriloga
+
+`include "constants.h"
+`include "discipline.h"
+
+module DAC5bit(A, D0, D1, D2, D3, D4);
+inout A, D0, D1, D2, D3, D4;
+electrical A, D0, D1, D2, D3, D4;
+
+parameter real vref  = 1 from [0:inf);
+parameter real trise = 400p from [0:inf);
+parameter real tfall = 400p from [0:inf);
+parameter real tdel  = 400p from [0:inf);
+parameter real vtrans  = 0.6;
+
+real out_scaled; // output scaled as fraction of 32
+real lsb;        // lsb, assuming range 0 to vref, or -vref/2 to vref/2
+   analog begin
+		out_scaled = 0;
+		lsb = vref/(31); // start and finish with lsb/2 --> 1lsb is lost) 
+		
+		out_scaled = out_scaled + ((V(D4) > vtrans) ? 16 : 0);
+		out_scaled = out_scaled + ((V(D3) > vtrans) ? 8 : 0);
+		out_scaled = out_scaled + ((V(D2) > vtrans) ? 4 : 0);
+		out_scaled = out_scaled + ((V(D1) > vtrans) ? 2 : 0);
+		out_scaled = out_scaled + ((V(D0) > vtrans) ? 1 : 0);
+		V(A) <+ transition(vref*out_scaled*lsb -vref/2, tdel, trise, tfall );
+    end
+endmodule
+

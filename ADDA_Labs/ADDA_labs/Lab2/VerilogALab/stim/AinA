@@ -1,0 +1,8 @@
+# Stimulus file for vpwlf for AinA
+0 				0
+49.95e-9 		0
+50e-9			1
+99.95e-9		1
+100e-9			0
+149.95e-9		0
+150e-9			1

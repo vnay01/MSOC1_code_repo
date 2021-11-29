@@ -1,0 +1,81 @@
+#affirma-modelwriter-2.31
+model VCO {
+  modeltemplate {
+classification {{Verilog-A Sample Library} {PLL Components}}
+type Verilog-A
+comments { Description: Voltage Controlled Oscillator
+    vin:		frequency control voltage [V,A]
+   vout:	    sine wave output [V,A]
+
+   This model is an example, provided "as is" without express or
+   implied warranty and with no claim as to its suitability for
+   any purpose.}
+version {$Revision: 2.8 $}
+authors {Cadence Design Systems, Inc.}
+resources {
+
+}
+template {[[current header]]
+
+`include "discipline.h"
+`include "constants.h"
+
+module [[form modelName]](vin, vout);
+input  vin;
+output vout;
+electrical vin, vout;
+  parameter real    vco_amp = [[form vamp]]  from (0:inf);
+  parameter real     vco_cf = [[form centf]]  from (0:inf);
+  parameter real   vco_gain = [[form gainp]]  exclude 0.0;
+  parameter integer vco_ppc = [[form pts]]  from [4:inf);
+					
+   real wc;              //   center freq in rad/s
+   real phase_lin;       //   wc*time component of phase
+   real phase_nonlin;    //   the idt(k*f(t)) of phase
+   integer num_cycles;   // number of cycles in linear phase component
+   real inst_freq;       // instanteous frequency
+
+   analog begin
+
+      @ ( initial_step ) begin
+          wc = `M_TWO_PI * vco_cf;
+      end
+
+      //
+      // linear portion is calculated so that it remains in the +/- 2`PI range
+      // This is to ensure it's value doesn't get too large and cause rounding
+      // problems for calculation of the phase.
+      //
+      phase_lin = wc * $abstime;
+      num_cycles = phase_lin / `M_TWO_PI;
+      phase_lin = phase_lin - num_cycles * `M_TWO_PI;
+
+      phase_nonlin =  `M_TWO_PI * vco_gain * idtmod ( V(vin), 0, 1000.0, 0.0);
+
+      V(vout) <+ vco_amp * sin (phase_lin + phase_nonlin);
+
+      //
+      // ensure that modulator output recalculated soon.
+      //
+      inst_freq = vco_cf + vco_gain * V(vin);
+      $bound_step (1/(vco_ppc * inst_freq));
+   end
+endmodule
+
+}
+form {
+identifier modelName -default vco -prompt {Model Name }
+number vamp -default 1.0 -units { V:  mV:m uV:u } -popupinfo {"vco_amp=>Sinewave output amplitude [V]"} -prompt { Output Amplitude }
+number centf -default 120.0 -units { Hz:  KHz:K  MHz:M GHz:G } -popupinfo {"vco_cf=>Output Frequency for Zero Control Voltage [Hz]"} -prompt { Center Frequency }
+number gainp -default 120.0 -units { KHz/V:K  Hz/V:   MHz/V:M GHz/V:G } -popupinfo {"vco_gain=>Frequency shift per volt of Control singal change [Hz/Volt]"} -prompt { VCO Gain (sensitivity) }
+option pts -list {"4" "8" "10" "12" "16" "20" "25" "30" "40" } -default 8 -popupinfo {"vco_ppc=>Limit simulator timestep to calculate N points per cycle"} -prompt { Points Per Cycle of Center Frequency }
+
+}
+  }
+  assign centf {1500.0 Hz}
+  assign vamp {1.0 V}
+  assign modelName vco
+  assign pts 40
+  assign gainp {1000.0 KHz/V}
+}
+

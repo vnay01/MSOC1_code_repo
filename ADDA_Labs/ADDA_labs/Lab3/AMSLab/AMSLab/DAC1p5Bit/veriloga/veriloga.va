@@ -1,0 +1,36 @@
+// VerilogA for SpectreVerilog_VerA, DAC1p5Bit, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module DAC1p5Bit(A, D0, D1);
+inout A;
+electrical A;
+inout D0;
+electrical D0;
+inout D1;
+electrical D1;
+parameter real Vref = 0.5;
+
+real thresh;
+real x0,x1,out;
+
+analog begin
+
+@(initial_step) begin
+thresh = 1.2/2;
+out=0;
+end
+
+x0 = (V(D0) > thresh);
+x1 = (V(D1) > thresh);
+
+if ((x1==1) && (x0==0)) out = ???;
+if ((x1==0) && (x0==1)) out = ???;
+if ((x1==0) && (x0==0)) out = ???;
+
+V(A) <+ transition(out, 10p, 100p);
+end
+
+
+endmodule
