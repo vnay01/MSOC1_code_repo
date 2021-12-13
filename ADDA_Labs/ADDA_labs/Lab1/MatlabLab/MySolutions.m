@@ -62,26 +62,37 @@ if ex==1
   
   win   = 'rect';
   % Generate and sample signal
-
   x     = sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples',len);
-%  a     = sampling('signal','sine','fin',2e6, 'fs',20e6,'ain',A1,'samples',len);
+%   x = sampling('signal','sine_real','fin',fin,'fs',fs,'ain',A1,'samples',len);
   % Make FFT
   spec  = adcfft('d',x.data,'skip',1,'mean',means,'N',Nx,'w',win);
 
   % function to find the maximum peak of spec.
-  [max_signal, max_index] = max(spec);
+  [max_signal, max_index] = max(findpeaks(spec));
+  fprintf('Signal Peak : %d \n',(max_signal));
+  fprintf('Frequency Index : %d \n',max_index-1);
   % Plot
   
   figure(1); clf;
-  plot(0:length(spec)-1,20*log10(abs(spec)),'k-')
+  plot(0:length(spec)-1,20*log10(abs(spec)),'r-')
   xlabel("Frequency : Hz");
-  ylabel("Power ");
-  legend('signal1; Window -rect ');
+  ylabel("Power Spectral Density : dB ");
+  legend('Signal1; Window -rect ');
   
-  fprintf('Signal Peak : %d \n',max_signal);
-
-  fprintf('Frequency Index : %d \n',max_index);
+  % FFT with hann1 window
+  figure;
+  win = 'hann1';
+  spec = adcfft('d',x.data,'skip',1,'mean',means,'N',Nx,'w',win);
+  plot(0:length(spec)-1,20*log10(abs(spec)),'r-');
+  xlabel("Frequency : Hz");
+  ylabel("Power Spectral Density : dB ");
+  legend('Signal1; Window -hann1 ');
+ [max_signal, max_index] = max(spec);
+  
+  fprintf('Signal Peak : %d \n',(max_signal));
+  fprintf('Frequency Index : %d \n',max_index-1);
 end
+
 
 % Exercise 2    -- Coherent Sampling with FFT and hann1 window.
 if ex==2
@@ -172,67 +183,73 @@ end
 
 if ex==5
   % Put YOUR OWN ORIGINAL solution here!
-   win ='rect';
+   win ='hann1';
    fin = 9.97e12;
    fs= 81.92e12;
    Nx =8192;
-    
-   x= sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples',len);
-   q_noise = Arndn * randn(size(x.data));
-   x    = x.data + q_noise;
+   R = 10;
    
-   y = quantization('data',x,'R',R,'vref',1,'npow', npow);
+   x= sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples',len);
+   q_noise =Arndn*randn(size(x.data)); 
+%    q_noise_scaled = rescale(q_noise,(-A1/2^R),(A1/2^R));
+   x = x.data + q_noise;
+   
+   
+%    x.data    = x.data + q_noise; % Added white random noise to signal.
+   
+%    y = quantization('data',x,'R',R,'vref',1,'npow', npow);
    
    
    % FFT of quantized signal
    % FFT with averaging = 16 % default
-  spec = adcfft('d',y, 'skip',1,'mean',means,'N',Nx,'w',win);
+  spec = adcfft('d',x, 'skip',1,'mean',16,'N',Nx,'w',win);
     
-  tiledlayout(3,1);
- 
-  nexttile
-  figure(5);
-  xlim([0 1200]);
-  plot(0:length(spec)-1,20*log10(spec), 'k-');
-  xlim([900 1200])
+   figure(5);
+   plot(0:length(spec)-1,20*log10(spec), 'k-')
+   hold on
+%   xlim([900 1200])
+%   spec1 = adcfft('d',x,'skip',1,'mean',64,'N',Nx,'w',win);
+%   nexttile
+%   plot(0:length(spec1)-1,20*log10(spec1),'r-');
   title('Signal PSD with Quantization Noise')
-  subtitle('Averaging : 16 - Default')
+  subtitle('Averaging : 16 ')
   xlabel('Frequency');
   ylabel('Power :dB');
-  fprintf("%.6f ",mean(spec));
+%   fprintf("%.6f ",mean(spec))
 
-   % FFT with averaging = 64
-  nexttile
-  spec = adcfft('d',y,'skip',1,'mean',means*4,'N',Nx,'w',win);
-  plot(0:length(spec)-1,20*log10(spec),'r-');
-  xlim([900 1200])
-  subtitle('Averaging : 64')
-  xlabel('Frequency');
-  ylabel('Power :dB');
-  fprintf("%.6f ",mean(spec));
+%    % FFT with averaging = 64
+%   spec = adcfft('d',x,'skip',1,'mean',64,'N',Nx,'w',win);
+%   plot(0:length(spec)-1,20*log10(spec),'r-');
+%   subtitle('Averaging : 64')
+%   xlabel('Frequency');
+%   ylabel('Power :dB');
+%   fprintf("%.6f ",mean(spec))
  
   % FFT with averaging = 0 
-  % Only the last FFT of the signal is output
-  nexttile
-  means = 0;
-  spec = adcfft('d',y,'skip',1,'mean',means,'N',Nx,'w',win);
-  plot(0:length(spec)-1,20*log10(spec));
-  xlim([900 1200])
-  subtitle('Zero averaging')
-  xlabel('Frequency');
-  ylabel('Power :dB');
-  fprintf("%.6f ",mean(spec));
+%   % Only the last FFT of the signal is output
+%   nexttile
+%   means = 1;
+%   spec = adcfft('d',x,'skip',1,'mean',means,'N',Nx,'w',win);
+%   plot(0:length(spec)-1,20*log10(spec));
+%   subtitle('Zero averaging')
+%   xlabel('Frequency');
+%   ylabel('Power :dB');
+%   fprintf("%.6f ",mean(spec));
 
-% vnay01 : Issues with plot...!! No change observed when averaging is
-% changed...! 
-% Performance Parameters of ADC
-figure(52);
-hold on
+% % vnay01 : Issues with plot...!! No change observed when averaging is
+% % changed...! 
+% % Performance Parameters of ADC
+% % figure(52);
+
 % perf = adcperf('data',spec,'snr','sndr','sfdr','sdr','w',win,'plot',1);
-perf = adcperf('data',spec,'snr','w',win,'plot',1);
-hold off
+perf = adcperf('data',spec,'snr','sndr','w',win);
+
+% 
 fprintf(newline)
 fprintf(" Performance - SNR : %.3f",perf.snr);
+fprintf(newline)
+fprintf("Performance - SNDR : %.3f",perf.sndr);
+
 end
 
 
@@ -267,19 +284,14 @@ if ex==6
 
 end
 
-% Exercise 7  -- code to study noise 
+
+% Exercise 7  -- code to study kT/C noise 
 if ex ==7
     cla;
   
     win = 'hann1';
+    
     Cs = 0.01e-12:0.2e-12:10.0e-12 ;  % range of Cs 0.01 pf to 10.0 pf - steps : 0.2 pf
-%     g = length(Cs);
-%     fprintf("%d",g);
-%     fprintf(newline)
-%     fprintf("%.2f \t",Cs)
-sampled_signal  = [1: length(Cs)];    
-signal_fft      = [1: length(Cs)];
-signal_perf     = [1: length(Cs)];
 
 % colorstring = 'kbgry';
 for q_step = [8 10 12 14]
@@ -291,6 +303,7 @@ for q_step = [8 10 12 14]
         signal_fft = adcfft('d',signal_quant,'skip',1,'mean',means,'N',Nx,'w',win);
         signal_perf = adcperf('data',signal_fft,'snr','w',win);
         snr_2(k) = signal_perf.snr;
+        
 %{
     Block below for testing correctness of length
     uncomment for testing
@@ -306,20 +319,27 @@ for q_step = [8 10 12 14]
     end
 figure(7);
 hold on
-% colorstring = ['k' 'b' 'g' 'r'];
-% lab_bit = [8 10 12 14];
-plot(Cs,snr_2,'LineWidth',4);
-%{ 
-Add markers at Cs = 0.01 to 10.0 for each R bit quantizer
-xt = [Cs];
-yt = [snr_2];
-text(xt,yt,'')
-%}
+plot(Cs,snr_2,'LineWidth',4)
 legend('8 bit','10 bit','12 bit','14 bit')
 xlabel("Cs in F ")
-ylabel("SNR : db")
+ylabel("SNR : dB")
+% Calculation of theoretical SNRs
+% SNR_theoretical = 20 * log10(P_signal/P-q_noise) = 6.02*N + 1.76 dB
+ 
+figure(71)
+   q_bit = [8 10 12 14];
+   for k = 1:1:length(q_bit)
+       SNR_theo(k) = 6.02*q_bit(k) + 1.76;
+       fprintf("%.4f \t",SNR_theo(k));
+        hold on
+    plot(q_bit(k),SNR_theo(k),'rd')
+    
+   
+   end
+   
 
 end
+
 
 % bar(Cs,snr_2,0.001,'g')
 % end
@@ -335,71 +355,69 @@ Block works... Plotting needs to be beautified!!
 
 % Exercise 8    -- Study effect of clock jitter.
 if ex==8
-
+    clf;
     % Put YOUR OWN ORIGINAL solution here!
     win = 'hann1';
     % come up with come algo for generating fin as prime numbers for better
     % simulation range!!
-    fin    = [9.97e6 10.09e6 10.13e6 11.17e6 ];
+    sndr1 = [];
+    sndr2 = [];
+    sndr3 = [];
+    snr_jit1 = [];
+    snr_jit2 = [];
+    snr_jit3 = [];
     
-    for j = 1:1:2 
-    fs = fin(j).*(8192/(fin(j).*100));
-    end
-    jit_gaus = [1e-15 5e-15 15e-15];     % jitter deviation : 1ps 5ps 15ps
-    Cs = 0.01e-12;
-
+  primenums = primes(floor(Nx/2.1));
+  fin =primenums(3:20:length(primenums))/Nx*fs;
+    
+    jit_gaus1 = 1e-12;
+    jit_gaus2 = 5e-12;
+    jit_gaus3 = 15e-12;     % jitter deviation : 1ps 5ps 15ps
+        for k=1:length(fin)
     %sampling('signal','sine','fin',fin,'fs',fs,'ain',A1*0.97,'samples', len,'k2',sk2,'k3',sk3,'k4',sk4,'k5',sk5,'Cs',Cs,'Rs',Rs,'jit_gaus',jit_gaus);
- 
-   figure(8)
-   tiledlayout(4,1)
-   nexttile
-  for m = 1:1:3 
-    for k =1:1:4 
-  sampled_signal =  sampling('signal','sine','fin',fin(k),'fs',fs,'ain',A1,'samples', len,'Cs',Cs,'jit_gaus',jit_gaus(m));
-  signal_fft    = adcfft('d',sampled_signal.data,'skip',1,'mean',means,'N',Nx,'w',win);
-  signal_perf   = adcperf('data',signal_fft,'snr','sndr','w',win);
-  snr_signal(k)    = signal_perf.snr;
-  sndr_signal(k)    = signal_perf.sndr;
-  plot(0:length(signal_fft)-1,20*log10(abs(signal_fft)),'r')
-  hold on
+    sampled_signal = sampling('signal','sine','fin',fin(k),'fs',fs,'ain',A1,'samples', len,'jit_gaus',jit_gaus1);
+    signal_fft = adcfft('d',sampled_signal.data,'skip',1,'mean',16,'N',Nx,'win',win);
+    signal_perf = adcperf('data',signal_fft,'snr','sndr','sfdr','sdr','w',win);
+    sndr1(k)= signal_perf.sndr;
+    snr_jit1(k) = -20*log(2*pi*fin(k)*jit_gaus1);
+        end
+                for k=1:length(fin)
+    %sampling('signal','sine','fin',fin,'fs',fs,'ain',A1*0.97,'samples', len,'k2',sk2,'k3',sk3,'k4',sk4,'k5',sk5,'Cs',Cs,'Rs',Rs,'jit_gaus',jit_gaus);
+    sampled_signal = sampling('signal','sine','fin',fin(k),'fs',fs,'ain',A1,'samples', len,'jit_gaus',jit_gaus2);
+    signal_fft = adcfft('d',sampled_signal.data,'skip',1,'mean',16,'N',Nx,'win',win);
+    signal_perf = adcperf('data',signal_fft,'snr','sndr','sfdr','sdr','w',win);
+    sndr2(k)= signal_perf.sndr;
+    snr_jit2(k) = -20*log(2*pi*fin(k)*jit_gaus2);
+                end
+    for k=1:length(fin)
+    %sampling('signal','sine','fin',fin,'fs',fs,'ain',A1*0.97,'samples', len,'k2',sk2,'k3',sk3,'k4',sk4,'k5',sk5,'Cs',Cs,'Rs',Rs,'jit_gaus',jit_gaus);
+    sampled_signal = sampling('signal','sine','fin',fin(k),'fs',fs,'ain',A1,'samples', len,'jit_gaus',jit_gaus3);
+    signal_fft = adcfft('d',sampled_signal.data,'skip',1,'mean',16,'N',Nx,'win',win);
+    signal_perf = adcperf('data',signal_fft,'snr','sndr','sfdr','sdr','w',win);
+    sndr3(k)= signal_perf.sndr;
+    snr_jit3(k) = -20*log(2*pi*fin(k)*jit_gaus3);
+                end
+    figure('Name','Ex_1.8','NumberTitle','off');
+  plot(fin,sndr1,'k-')
 
-      end
- 
-  end
-  
-  xlabel("Frequency");
-  ylabel("PSD");
-
-
-%   axis([0 length(signal_fft)-1 ])
-    nexttile
-  plot(fin,snr_signal,'k.-','LineWidth',2)
-  xlabel("Frequency");
-  ylabel("SNR");
-  hold on
-nexttile
-  plot(fin,sndr_signal,'kd-')
-   xlabel("Frequency");
-  ylabel("SNDR");
-%{
-  xpos = [fin];
- ypos = [sndr_signal];
- lbl = ['x','y','d','f'];
- for t = 1:1:4
-text(xpos(t),ypos(t),lbl(k))
- end
- %}
-  
-  hold off
-  fprintf(newline);
-  fprintf("%.4f",snr_signal);
-  fprintf(newline);
-  fprintf("%.4f",sndr_signal);
-  fprintf(newline);
- 
-%{
-  Theoretical calculation and plot pending.
-  %}
+    hold on
+    plot(fin,sndr2,'r.-')
+    plot(fin,sndr3,'gd-')
+    legend( '1ps','5ps','15ps');
+    xlabel('Frequency ');
+    ylabel('SNR dB');
+    % Theoretical SNR due to jitter
+    % SNR = -20*log(2*pi*fin*jit_gaus)
+    figure('Name','Theoretical SNR','NumberTitle','off');
+    plot(fin,snr_jit1,'bd-')
+    hold on
+    plot(fin,snr_jit2,'r.-')
+    plot(fin,snr_jit3,'k-')
+    legend( '1ps','5ps','15ps');
+    xlabel('Frequency ');
+    ylabel('SNR dB');
+    
+   
 end
 
 % Exercise 9  -- Effect of clock jitter
@@ -408,27 +426,28 @@ if ex==9
     % Put YOUR OWN ORIGINAL solution here!
     win = 'hann1';
     fs = 250e6;
-%     fin = (3127./8192).*fs;     % required to avoid spectral leakage due to windowing.
-   
-    fin = 100e6;        % uncomment for non-coherent sampling    
-    figure(9)
-    tiledlayout(2,1)
-    nexttile
-    for jit_gaus = 1e-15:1e-15:20e-12    
-         sampled_signal =  sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples', len,'jit_gaus',jit_gaus);
+    fin = (3127/8192).*fs;     % required to avoid spectral leakage due to windowing.
+    sndr_jit =[];
+    sndr_jit_2 =[];
+    jit_gaus = 1e-15:1e-12:20e-12;
+  
+    for   k = 1:1:length(jit_gaus)
+         sampled_signal =  sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples', len,'jit_gaus',jit_gaus(k));
+         sampled_signal2 =  sampling('signal','sine','fin',100e6,'fs',fs,'ain',A1,'samples', len,'jit_gaus',jit_gaus(k));
          signal_fft    = adcfft('d',sampled_signal.data,'skip',1,'mean',means,'N',Nx,'w',win);
          signal_perf   = adcperf('data',signal_fft,'sndr','w',win);
-         plot(jit_gaus,signal_perf.sndr,'r.')
-         hold on
-         
-         
+         sndr_jit(k) = signal_perf.sndr;
+         signal_fft_2    = adcfft('d',sampled_signal2.data,'skip',1,'mean',means,'N',Nx,'w',win);
+         signal_perf_2   = adcperf('data',signal_fft_2,'sndr','w',win);
+         sndr_jit_2(k) = signal_perf_2.sndr;
     end
-    nexttile
-    plot(0:length(signal_fft)-1,10*log10(abs(signal_fft)))
-    xlabel("jitter_deviation");
+    figure('Name','Ex1.9','NumberTitle','off');
+     plot(jit_gaus,sndr_jit,'r.-')
+     hold on
+    plot(jit_gaus,sndr_jit_2,'k.-')
+    xlabel("jitter deviation");
     ylabel("SNDR");
-    hold off
-    
+    legend('Coherent Sampling','Non-Coherent');
 end
 
 % A study in quantization %
@@ -437,124 +456,174 @@ if ex==10
     % Put YOUR OWN ORIGINAL solution here!
     cla;
     R = 8;
+    Vref    = 1;             % Reference voltage (single ended; range is from -Vref to Vref)
+    delta   = 2*Vref/(2^R);  % A quantization step
+    Arndn   = delta/sqrt(12);
+    
+    
+    
     win = 'hann1';
     sampled_signal = sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples', len);
-%     added_noise = Arndn*randn(size(sampled_signal.data));       % adding gaussian noise with same amp. of 8 bit Quantized Noise.
-%     noised_signal = sampled_signal.data + added_noise;
-    
-    signal_fft = adcfft('d',sampled_signal.data,'skip',1,'mean',means,'N',Nx,'w',win);
-    signal_perf   = adcperf('data',signal_fft,'sndr','w',win);
-    
+    added_noise = Arndn *randn(size(sampled_signal.data));       % adding gaussian noise with same amp. of 8 bit Quantized Noise.
+    noised_signal = sampled_signal.data + added_noise;
+    fprintf("%.4f",Arndn);
+    fprintf(newline);
+    signal_fft = adcfft('d',noised_signal,'skip',1,'mean',means,'N',Nx,'w',win);
+    signal_perf   = adcperf('data',signal_fft,'sndr','w',win);  
+
     % plot starts here
-    figure(10)
     tiledlayout(2,1)
+    figure('Name','Effect of averaging on Random Noise','NumberTitle','off')
     nexttile
-    plot(0:length(signal_fft)-1,120*log10(abs(signal_fft)))
+    plot(0:length(signal_fft)-1,20*log10(abs(signal_fft)),'r-')
     xlabel("Frequency");
     ylabel("PSD : Signal");
+    legend('No. of Averages : 16');
     fprintf(newline);
     fprintf("Calculated SNDR : %.4f",signal_perf.sndr);
-    fprintf(newline);
     
+    %effect of averaging
+    means = 1;
+    signal_fft2 = adcfft('d',noised_signal,'skip',1,'mean',means,'N',Nx,'w',win);
+    signal_perf2   = adcperf('data',signal_fft2,'sndr','w',win); 
+    fprintf("Mean change to %d",means);
+    fprintf(newline);
+
     nexttile
-    % effect of averaging
-    means = 1:1:16;
-    for k = 1:1:16
-        signal_fft = adcfft('d',sampled_signal.data,'skip',1,'mean',means(k),'N',Nx,'win',win);
-        signal_perf   = adcperf('data',signal_fft,'sndr','w',win);
-        fprintf("%d \t ",k);
-        plot(0:length(signal_fft)-1,120*log10(abs(signal_fft)))
-        hold on
-    fprintf(newline);
-    fprintf("Calculated SNDR : %.4f \t",signal_perf.sndr);
-    end
-    
+    plot(0:length(signal_fft2)-1,20*log10(abs(signal_fft2)),'g-')
     xlabel("Frequency");
     ylabel("PSD : Signal");
+    legend('No. of Averages : 1');
+    fprintf(newline);
+    fprintf("Calculated SNDR : %.4f",signal_perf2.sndr);
+    fprintf(newline);
     
-    
-    
+
 end
 
 % Exercise 11
 if ex==11
     % Put YOUR OWN ORIGINAL solution here!
-       R = 8;
+    cla;
+    R = 8;
+    Vref    = 1;             % Reference voltage (single ended; range is from -Vref to Vref)
+    delta   = 2*Vref/(2^R);  % A quantization step
+    Arndn   = delta/sqrt(12);
+    
+ 
+    
     win = 'hann1';
-%     npow =  A1; 
     sampled_signal = sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples', len);
-    added_noise = A1*randn(size(sampled_signal.data));
-    noised_signal = sampled_signal.data + added_noise;
-    quantized_sig = quantization('data',noised_signal,'R',R,'vref',1,'npow', npow);
-    signal_fft = adcfft('d',quantized_sig,'skip',1,'mean',means,'N',Nx,'w',win);
-    signal_perf   = adcperf('data',signal_fft,'sndr','w',win);
-    
+    quantized_signal = quantization('data',sampled_signal.data,'R',R,'vref',1,'npow', npow);
+    fprintf("%.4f",Arndn);
+    fprintf(newline);
+    signal_fft = adcfft('d',quantized_signal,'skip',1,'mean',means,'N',Nx,'w',win);
+    signal_perf   = adcperf('data',signal_fft,'sndr','w',win);  
+    fprintf("%d",means);
+    fprintf(newline);
     % plot starts here
-    figure(11)
     tiledlayout(2,1)
+    figure('Name','Exercise 11','NumberTitle','off')
     nexttile
-    plot(0:length(signal_fft)-1,120*log10(abs(signal_fft)))
-    
+    plot(0:length(signal_fft)-1,20*log10(abs(signal_fft)),'r-')
+    hold on
+    xlabel("Frequency");
+    ylabel("PSD : Signal");
+    legend('No. Of Average : 16');
     fprintf(newline);
     fprintf("Calculated SNDR : %.4f",signal_perf.sndr);
     fprintf(newline);
-    
-    nexttile
-    % effect of averaging
-    means = 1:1:64;
-    for k = 1:1:64
-        signal_fft = adcfft('d',quantized_sig,'skip',1,'mean',means(k),'N',Nx,'win',win);
-        signal_perf   = adcperf('data',signal_fft,'sndr','w',win);
-        plot(0:length(signal_fft)-1,120*log10(abs(signal_fft)))
-        hold on
-    fprintf(newline);
-    fprintf("Calculated SNDR : %.4f \t",signal_perf.sndr);
-    end
-   
-end
 
+    % studying the effect of averaging
+    R = 8;
+    Vref    = 1;             % Reference voltage (single ended; range is from -Vref to Vref)
+    delta   = 2*Vref/(2^R);  % A quantization step
+    Arndn   = delta/sqrt(12);
+    means = 1
+    win = 'hann1';
+    sampled_signal2 = sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples', len);
+    quantized_signal2 = quantization('data',sampled_signal2.data,'R',R,'vref',1,'npow', npow);
+    fprintf("%.4f",Arndn);
+    fprintf(newline);
+    signal_fft2 = adcfft('d',quantized_signal2,'skip',1,'mean',means,'N',Nx,'w',win);
+    signal_perf2   = adcperf('data',signal_fft2,'sndr','w',win);  
+    fprintf("%d",means);
+    fprintf(newline);
+    % plot starts here
+%     figure('Name','Exercise 11','NumberTitle','off')
+    nexttile
+    plot(0:length(signal_fft2)-1,20*log10(abs(signal_fft2)),'k-')
+    xlabel("Frequency");
+    ylabel("PSD : Signal");
+    legend('No. Of Average : 1');
+    fprintf(newline);
+    fprintf("Calculated SNDR : %.4f",signal_perf2.sndr);
+    fprintf(newline);
+   %{ 
+    means = 64;
+    signal_fft = adcfft('d',quantized_signal,'skip',1,'mean',means,'N',Nx,'w',win);
+    signal_perf   = adcperf('data',signal_fft,'sndr','w',win); 
+    fprintf("%d",means);
+    fprintf(newline);
+
+    figure('Name','Effect of averaging = 64','NumberTitle','off')
+    plot(0:length(signal_fft)-1,20*log10(abs(signal_fft)),'b-')
+    xlabel("Frequency");
+    ylabel("PSD : Signal");
+    fprintf(newline);
+    fprintf("Calculated SNDR : %.4f",signal_perf.sndr);
+    fprintf(newline);
+    %}
+end
 % Exercise 12  -- 
 if ex==12
     % Put YOUR OWN ORIGINAL solution here!
     % generate a ramp singnal [-1V to 1V] - using unit function
-    clf;
-    win = 'hann1';
-%    len = Nx * means = 8192 * 16 = 131072 pts.
-    sampled_signal = sampling('signal','ramp','fin',fin,'fs',fs,'ain',A1,'samples', len);
-    quantized_sig = quantization('data',sampled_signal.data,'R',12,'vref',1,'npow', npow); 
-    signal_fft = adcfft('d',quantized_sig,'skip',1,'mean',means,'N',Nx,'w',win);
+     R = 3;
     
-    figure(13);
-    plot(0:length(signal_fft)-1,20*log10(signal_fft),'k-');
+    % generation of a ramp signal
+    t = (1/fs)*(0:len-1);
+    k = 2/((len-1)*1/fs);
+    ramp_sig = t*k - 1;
+    quantized_signal = quantization('data',ramp_sig,'R',R,'vref',1); 
     
-%{
-    fin = 9.97e6;
-    fs = 81.92e6;
-  t = 0:(1/fs):((10*1/fin));
-  g = A1*sin(2*pi*fin*t);
-  figure(12);
-  plot(t,g,'r-')
-  grid on
+   
+    
+    figure('name', 'Ex 12a','NumberTitle','off');
+    hold on;
+    plot(t, ramp_sig,'b');
+    plot(t, quantized_signal,'k');
+    xlabel('time (s)');
+    ylabel(' Amplitude: V');
+    legend('ramp','quantized signal');
+    
+    % Quantization error with a sinusoidal input
+    means = 2;
+    len = Nx*means;
+    t = 1/fs*(0:(len-1));
+  
+    sin_signal = sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples',len);
+    quantized_sine_signal = quantization('data',sin_signal.data,'R',R,'vref',1); 
+    signal_fft = adcfft('d',quantized_sine_signal,'skip',1,'mean','N',Nx,'w',win);
+    
+    
+    figure('name', 'Ex 12b','NumberTitle','off');
+    hold on;
+    plot(t,sin_signal.data,'r')
+    plot(t, quantized_sine_signal,'g')
+    legend('Sample', 'quantized signal')
+    xlim([0 0.2*1e-6])
+    ylabel('Amplitude: V');
+    xlabel('time: s');
+% FFT of ramp signal produces a lot of harmonics ....due to the fact that a
+% ramp signal is composed of a multiple harmonics of a sine wave.
+% needs mathematical proof for my own understanding
 
     %}
-
-%     sampled_signal2 = sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples',len);
-%     figure(12);
-%     tiledlayout(2,1)
-%     nexttile
-%     plot(sampled_signal,'k-')
-%     nexttile
-%     plot(sampled_signal2,'r-')
-%     
- 
-%     plot((1/fs).*(0:len-1),ramp_sig(t));
-
-    
-    % sampling & quantization
    
 end
 
-% Exercise 13
+% Exercise 13   -- Proof whether Quantization is a random process?
 if ex==13
     % Put YOUR OWN ORIGINAL solution here!
 end
@@ -562,24 +631,169 @@ end
 % Exercise 14
 if ex==14
     % Put YOUR OWN ORIGINAL solution here!
+    R = 8;
+    Vref    = 1;             % Reference voltage (single ended; range is from -Vref to Vref)
+    delta   = 2*Vref/(2^(R+1));  % A quantization step
+    Arndn   = delta/sqrt(12);
+    
+    sampled_signal = sampling('signal','sine','fin',fin,'fs',fs,'ain',0.95,'samples',len);
+    noise_gauss = Arndn * randn(size(sampled_signal.data));
+    sampled_signal.data = sampled_signal.data + noise_gauss;
+    % quantization
+    quantized_signal = quantization('data',sampled_signal.data,'R',R,'vref',1,'npow',npow);
+    %run fft
+    signal_fft = adcfft('d',quantized_signal,'skip',1,'mean','N',Nx,'w',win);   
+    signal_perf = adcperf('data',signal_fft,'snr','sndr','sfdr','sdr','w',win)
+    figure('name', ' Ex 14 - dither');
+    plot(0:length(signal_fft)-1,20*log10(abs(signal_fft)),'k-')
+    xlabel("Frequency");
+    ylabel("PSD");
+    
+    x = sampling('signal','sine','fin',fin,'fs',fs,'ain',0.95,'samples',len);
+    y = quantization('data',x.data,'R',R,'vref',1);
+    spec = adcfft('d',y,'skip',1,'mean','N',Nx,'w',win);   
+    perf2 = adcperf('data',spec,'snr','sndr','sfdr','sdr','w',win)
+    figure('name', 'Ex 14 - No dither');
+    plot(0:length(spec)-1,20*log10(abs(spec)),'r-')
+    xlabel("Frequency");
+    ylabel("PSD");
+    
+    
 end
 
 % Exercise 15
 if ex==15
     % Put YOUR OWN ORIGINAL solution here!
+        R = 8;
+    Vref    = 1;             % Reference voltage (single ended; range is from -Vref to Vref)
+    delta   = 2*Vref/(2^(R+1));  % A quantization step
+    Arndn   = delta/sqrt(12);
+    
+    sampled_signal = sampling('signal','sine','fin',fin,'fs',fs,'ain',1.01,'samples',len);
+    noise_gauss = Arndn * randn(size(sampled_signal.data));
+    sampled_signal.data = sampled_signal.data + noise_gauss;
+    quantized_signal = quantization('data',sampled_signal.data,'R',R,'vref',1,'npow',npow);
+    
+    %fft
+    signal_fft = adcfft('d',quantized_signal,'skip',1,'mean','N',Nx,'w',win);   
+    signal_perf = adcperf('data',signal_fft,'snr','sndr','sfdr','sdr','w',win)
+    figure('name', ' Ex 14 - dither with clipping');
+    plot(0:length(signal_fft)-1,20*log10(abs(signal_fft)),'k-')
+    xlabel("Frequency");
+    ylabel("PSD");
+    
 end
+
 
 % Exercise 16
 if ex==16
     % Put YOUR OWN ORIGINAL solution here!
+    % add gaussian noise source
+    figure(16)
+    tiledlayout(4,4)
+    nexttile
+    
+    R = 10;
+    win = 'hann1';
+    sampled_signal = sampling('signal','sine','fin',fin,'fs',fs,'ain',A1,'samples',len);
+    
+    noise_gaus = Arndn*randn(size(sampled_signal.data)); % noise amp. corresponding to 10 bit Q
+   % add a noise source , the power of which will be swept in range 0 to 6
+   % Q_power
+ 
+    sampled_signal = sampled_signal.data + noise_gaus;
+    
+    for i = 0:1:6
+    ref_gaus = i.*noise_gaus;
+    sampled_signal = sampled_signal + ref_gaus;
+    
+    % takes FFT of noised signal.
+    signal_fft = adcfft('d',sampled_signal,'skip',1,'mean',means,'N',Nx,'w',win);
+    noise_power = adcfft('d',noise_gaus,'skip',1,'mean',means,'N',Nx,'w',win);
+    signal_perf = adcperf('data',signal_fft,'sndr','w',win);
+    
+    plot(0:length(signal_fft)-1,20*log10(signal_fft),'k.-')
+    nexttile
+  
+    xlabel("Frequency");
+    ylabel("PSD :Signal");
+    fprintf("SNDR = %.4f \t",signal_perf.sndr);
+
+    end
+    nexttile
+    plot(ref_gaus,signal_perf.sndr,'r.-')
+    
+    % add noise source for sweeping - 0 to 6 times gaussian noise power
+
+    
+    figure(16)
+    tiledlayout(2,2)
+    nexttile
+    plot(0:length(noise_power)-1, 20*log10(noise_power))
+    ylim([-120 0]);     % scales y -axis for better visualization
+    xlabel("Frequency");
+    ylabel("Noise : PSD");
+    hold on
+    nexttile
+%     plot(,20*log10(signal_fft));
+    xlabel("Frequency");
+    ylabel("PSD :Signal");
+    
+
+    
 end
 
 % Exercise 17
 if ex==17
     % Put YOUR OWN ORIGINAL solution here!
+    ADCdemo('x',1);
 end
  
 % Exercise 18
 if ex==18
     % Put YOUR OWN ORIGINAL solution here!
 end
+
+if ex==19
+    clf;
+    t = linspace(0,10,1000);
+
+    
+    x1 = sin(2*t);
+% fprintf("%d \t",length(t));
+
+plot(t,x1);
+% sampling
+end
+
+if ex == 54
+ % Exercise 15
+    % Put YOUR OWN ORIGINAL solution here!
+    win = 'hann1';
+    sndr =[];
+    
+    %smaple the signal
+    x = sampling('signal','sine','fin',fin,'fs',fs,'ain',1,'samples',len);
+    %create noise corresponding to 10 bit quantization error 
+    noise = randn(size(x.data))*0.56382*1e-3;
+    %signal and noise
+    x.data = x.data+noise;
+    %create 0 to 6 times noise
+    gaus_added = linspace(0,6,300);
+    
+    for i = 1:length(gaus_added)
+        y = quantization('data',(x.data+ gaus_added(i)*noise),'R',R,'vref',1);
+        spec = adcfft('d',y,'skip',1,'mean','N',Nx,'w',win);
+        perf1 = adcperf('data',spec,'snr','sndr','sfdr','sdr','w',win);
+        sndr(i) = perf1.snr;
+      
+    end
+    
+    figure('name', 'SNDR vs added gaussian noise');
+    plot(gaus_added, sndr);
+    ylabel('dB');
+    xlabel('gaussian noise');
+      fprintf("%.4f\t",sndr);
+end
+
+
