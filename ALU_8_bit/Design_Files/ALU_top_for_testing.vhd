@@ -4,7 +4,12 @@ use ieee.std_logic_1164.all;
 library work;
 use work.ALU_components_pack.all;
 
-entity ALU_top is
+-- use this for testbench.
+-- Functionally same as ALU_top with the exception of removing debouncers 
+-- Using debouncers in testbench were causing no clear output( because of debounce counters not able to complete counting )
+-- 
+
+entity ALU_top_for_test is
    port ( clk        : in  std_logic;
 --          btnU       : in  std_logic;
           reset      : in std_logic;
@@ -12,15 +17,15 @@ entity ALU_top is
           b_Sign     : in  std_logic;
           input      : in  std_logic_vector(7 downto 0);
           seven_seg  : out std_logic_vector(6 downto 0);
-          anode      : out std_logic_vector(7 downto 0)
+          anode      : out std_logic_vector(3 downto 0)
         );
-end ALU_top;
+end ALU_top_for_test;
 
-architecture structural of ALU_top is
+architecture structural of ALU_top_for_test is
 
 -- component declarations
 
--- output of debouncer is not clear HIGH...... during testing of-course!!!
+-- output of debouncer is not clear HIGH...!!!
 
 
 component ALU_ctrl is
@@ -88,15 +93,13 @@ end component;
 --   signal board_DIGIT_ANODE : std_logic_vector(3 downto 0) := "1111";
 --   signal board_SEGMENT : std_logic_vector( 6 downto 0) := "1111111";
     signal reset_in : std_logic;
-    signal anode_off : std_logic_vector(3 downto 0) := "1111";
    
 
 begin
 
-reset_in <= not reset ; 
-anode(7 downto 4) <= anode_off;     
+reset_in <= reset ;      
 
--- uncomment blocks below for a fixed reset                    
+-- uncomment required reset statement below for a fixed reset                    
 --reset_in <= '0' ;
 --reset_in <= '1';
 
@@ -109,21 +112,29 @@ anode(7 downto 4) <= anode_off;
    ---- input(b_Enter) comes from the pushbutton; output(Enter) goes to the FSM 
    
    ------- @ vnay01 :: Removing debouncers as the output of debouncers were not clear HIGH..
-                    -- something to do with architecture.. will check later.
-   debouncer_enter: debouncer
-   port map ( clk          => clk,
-              reset        => reset_in,
-              button_in    => b_Enter,
-              button_out   => Enter
-            );
+                    -- since in simulation, I did not provide the the delay of 25 ms for the 
+					-- debouncer clock to run its course, its best to remove debounce logic
+					-- during simulation only.
+   -- debouncer_enter: debouncer
+   -- port map ( clk          => clk,
+              -- reset        => reset_in,
+              -- button_in    => b_Enter,
+              -- button_out   => Enter
+            -- );
    
-    debouncer_sign: debouncer
-         port map ( clk          => clk,
-                    reset        => reset_in,
-                    button_in    => b_Sign,
-                    button_out   => Sign
-                       );
+    -- debouncer_sign: debouncer
+         -- port map ( clk          => clk,
+                    -- reset        => reset_in,
+                    -- button_in    => b_sign,
+                    -- button_out   => Sign
+                       -- );
     
+--        debouncer_reset: debouncer
+--         port map ( clk          => clk,
+--                    reset        => ,
+--                    button_in    => reset,
+--                    button_out   => reset_in
+--                       );
 
    -- ****************************
    -- DEVELOPE THE STRUCTURE OF ALU_TOP HERE
@@ -132,14 +143,14 @@ anode(7 downto 4) <= anode_off;
    port map (
                 clk => clk,
                 reset => reset_in,
-                button_in => Enter,
+                button_in => b_Enter,
                 button_out => edge_Enter
                 );
    Sign_edge_detector : edge_detector
    port map (
                 clk => clk,
                 reset => reset_in,
-                button_in => Sign,
+                button_in => b_sign,
                 button_out => edge_sign
                 );
    -- no changes in state --- maybe because reset is always active!!
@@ -156,8 +167,8 @@ anode(7 downto 4) <= anode_off;
    port map (
                clk => clk,
                reset => reset_in,
-               enter => edge_Enter,          -- connected to out of debouncer
-               sign => edge_sign,
+               enter => b_Enter,          -- connected to out of debouncer
+               sign => b_sign,
                FN => FN_ctrl,
                RegCtrl => RegCtrl_signal
                );
@@ -195,7 +206,7 @@ seg: seven_seg_driver
           BCD_digit => tb_bcd_out,          
           sign  => tb_sign,
           overflow  => tb_overflow,
-          DIGIT_ANODE => anode(3 downto 0),
+          DIGIT_ANODE => anode,
           SEGMENT   => seven_seg
         );
    
