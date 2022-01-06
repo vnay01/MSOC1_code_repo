@@ -45,8 +45,8 @@ signal address_counter : std_logic_vector(12 downto 0);         -- connects with
 signal data_write : std_logic_vector(7 downto 0);    -- holding stage of input data . passed to RAM location only when WRITE control is enabled 
 --signal data_read : std_logic_vector(7 downto 0);   -- holding stage of output data -- passed to Output dataline only when READ control is enabled
 signal write_enable , read_enable : std_logic ;     -- can be used to check control signal for requested operation
-signal current_mem_addr, next_mem_addr, current_mem_addr_buffer : unsigned(address_counter'range); -- used to implement a counter for memory address
---signal func : std_logic_vector(1 downto 0) ;        -- can be eliminated completely!!!!
+signal current_mem_addr, next_mem_addr : unsigned(address_counter'range); -- used to implement a counter for memory address
+
 --signal mem_empty : std_logic;                           -- flag to show empty memory stack.
 --signal mem_full : std_logic;                            -- flag to show full memory stack.
 
@@ -65,40 +65,13 @@ RAM_module : blk_mem_gen_0
 
 address_counter <= std_logic_vector(current_mem_addr);
 
-------------------------------------------------------------
---- process below generates signal for valid control -------
 
------------ Block below may be redundant -------------------
---control_signal_validity: process(control_signal)
---        begin
---            write_enable <= '0';        -- default 
---            read_enable <= '0';
-       
---        case control_signal is
---            when "01" =>
---            write_enable <= '1';
---            read_enable <= '0';
-            
---            when "10" =>
---            write_enable <= '0';
---            read_enable <= '1';
-            
---            when others =>
---            write_enable <= '0';
---            read_enable <= '0';
-         
---         end case;
-         
---        end process;
-        
 --------------------------------------------------------
 -------- Current Memory address synch with clk ---------
 
  mem_addr_sync: process(clk)
         begin
-        
-        
-           
+
             if reset = '1' then
              current_mem_addr <= (others => '0'); 
              else
@@ -113,12 +86,9 @@ address_counter <= std_logic_vector(current_mem_addr);
    memory_address_counter:process(control_signal, data_in, current_mem_addr, clk)
  
             begin
-                
-               
-                if rising_edge(clk) then
---                current_mem_addr_buffer <= current_mem_addr;
---                next_mem_addr <= current_mem_addr_buffer;
-                next_mem_addr <= current_mem_addr; 
+
+--                if rising_edge(clk) then
+
                 case control_signal is
                 
                 when "00" =>
@@ -126,6 +96,7 @@ address_counter <= std_logic_vector(current_mem_addr);
                 read_enable <= '0';
 --                data_write <= (others =>'0');
 --                next_mem_addr <= current_mem_addr_buffer;
+                next_mem_addr <= current_mem_addr;
                 
                 when "01" =>                --- write mode
                 write_enable <= '1';
@@ -139,21 +110,24 @@ address_counter <= std_logic_vector(current_mem_addr);
 --                data_write <= (others => '0');
                 next_mem_addr  <= current_mem_addr - 1;
                 
+                
                 when "11" =>
                 write_enable <= '0';
                 read_enable <= '0';
 --                data_write <= (others => '0');
 --                next_mem_addr <= current_mem_addr_buffer;
+                next_mem_addr <= current_mem_addr;
                 
                 when others =>
                 write_enable <= '0';
                 read_enable <= '0';
 --                data_write <= (others => '0');
 --                next_mem_addr <= current_mem_addr_buffer;
+                next_mem_addr <= current_mem_addr;
 
                 end case;
                     
-            end if;
+--            end if;
             end process;
 
 
