@@ -68,7 +68,7 @@ process
 begin
 if ( prod > 255 ) then
     overflow <= '1';
-    result <=(others=>'1');
+    result <="0000000011111111";                        -- brute force unsigned 255
     else
     overflow <= '0';
     result <= std_logic_vector( prod);
