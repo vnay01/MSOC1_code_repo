@@ -35,7 +35,8 @@ entity Matrix_Multiplier_top is
         reset : in std_logic;
         enable : std_logic;
         X : in std_logic_vector(7 downto 0);        -- Input Matrix -- User input
-        A : in std_logic_vector(6 downto 0);        -- Co-efficient matrix comes from ROM
+        A : in std_logic_vector(13 downto 0);        -- Co-efficient matrix comes from ROM              -- each ROM location stores 2 elements
+        product_elem : out std_logic_vector( 16 downto 0);
         busy : out std_logic;                       -- remains HIGH when system is calculating
         ready : out std_logic                       -- goes HIGH when the system is ready for next input
         );
@@ -62,7 +63,8 @@ signal done : std_logic;            -- connects datapath : done to controller : 
 signal datapath_ctrl : std_logic_vector(6 downto 0);
 signal reg_X_odd, reg_X_odd_next  : std_logic_vector(7 downto 0);  
 signal reg_X_even, reg_X_even_next : std_logic_vector(7 downto 0);        -- will hold 8 bits of X
-signal reg_A_odd, reg_A_even : std_logic_vector(6 downto 0);        -- will hold 7 bits of A
+signal reg_A_odd, reg_A_odd_next : std_logic_vector(6 downto 0);        -- will hold 7 bits of A
+signal reg_A_even, reg_A_even_next : std_logic_vector(6 downto 0);
 signal elem_prod_mat : std_logic_vector(16 downto 0);               -- goes to RAM 
 
 signal i_mat_count, i_mat_count_next: unsigned(3 downto 0);             -- counters
@@ -100,7 +102,8 @@ port map(
             o_done =>load_done
   );
 
--- register update
+-- register update to load Input Matrix
+
 process(i_mat_count, load_done, clk)
 begin
         if load_done = '1' then
@@ -133,6 +136,39 @@ begin
 end process;
 
 
+process(i_mat_count, load_done, clk)
+begin
+        if load_done = '1' then
+        if rising_edge(clk) then
+        i_mat_count_next <= i_mat_count + 1;
+        reg_A_odd_next <= A(13 downto 7);
+        reg_A_even_next <=A( 6 downto 0);
+        end if;
+        else
+        i_mat_count_next <= i_mat_count;
+        reg_A_odd_next <= (others => '0');
+        reg_A_even_next <= (others => '0');
+        end if;        
+            
+end process;
+
+counter_process_A:process(clk, reset, i_mat_count_next, A )
+begin
+   if reset = '1' then
+   i_mat_count<= (others =>'0');
+   reg_A_odd <= (others =>'0');
+   reg_A_even <= (others =>'0');
+   else
+   if rising_edge(clk) then
+    i_mat_count <= i_mat_count_next;
+    reg_A_odd <= reg_A_odd_next;
+    reg_A_even <= reg_A_even_next;
+    end if;
+    end if;
+end process;
+
+
+
 -- DataPath
 dataPath : PE_module
 port map (
@@ -161,5 +197,5 @@ port map (
             ram_full => ram_full
             );
 -- GLUE logic goes here
-
+product_elem <= data_out;
 end Behavioral;
