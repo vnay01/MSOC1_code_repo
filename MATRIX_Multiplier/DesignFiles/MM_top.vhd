@@ -174,6 +174,10 @@ begin
             address <= x"3";
             X_odd <= data_odd(12);
             X_even <= data_odd(14);
+            
+            when others =>
+            NULL;
+            
             end case;
         -- Counter for 2nd element
        when "01" =>  
@@ -194,6 +198,9 @@ begin
             address <= x"7";
             X_odd <= data_even(12);
             X_even <= data_even(14); 
+            when others =>
+            NULL;
+                        
             end case;
             -- Counter for 3rd element
        when "10" =>
@@ -214,6 +221,9 @@ begin
             address <= x"b";
             X_odd <= data_odd(13);
             X_even <= data_odd(15); 
+            when others =>
+            NULL;
+                        
             end case;
             -- Counter for 4th element
        when "11" =>
@@ -233,7 +243,10 @@ begin
             when "11" =>
             address <= x"f";
             X_odd <= data_even(13);
-            X_even <= data_even(15);                                                                                                                                                                     
+            X_even <= data_even(15);  
+            when others =>
+            NULL;
+                                                                                                                                                                                           
             end case;
             
         when others =>
