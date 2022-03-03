@@ -128,7 +128,7 @@ controller: MM_controller
 ROM: COEF_ROM
   PORT map (
     clka => clk,
-    ena => datapath_ctrl(0),
+    ena => '1',
     addra =>ROM_address,
     douta =>dataROM
   );
@@ -284,14 +284,14 @@ end process;
 
 ROM_Read : process( clk, address, ROM_enable )
     begin
-    if ROM_enable = '1' then
-        if rising_edge(clk) then
+    if rising_edge(clk) then
+        if ROM_enable = '1' then    
         A_odd <= dataROM(6 downto 0);
         A_even <= dataROM( 13 downto 7);
-        end if;
     else
         A_odd <= (others =>'0');
         A_even <= (others =>'0');
-    end if;     
+    end if;
+  end if;     
     end process;
 end Behavioral;
