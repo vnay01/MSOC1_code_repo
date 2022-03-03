@@ -56,14 +56,14 @@ end component;
 
 ---- DataPath -----
 component data_path is
- Port ( 
+Port ( 
         clk : in std_logic;
         reset : in std_logic;
         in_X_odd, in_X_even : in std_logic_vector( 7 downto 0);
         in_A_odd, in_A_even : in std_logic_vector( 6 downto 0);
-        ctrl : in std_logic_vector( 6 downto 0);   -- This has to be mapped to controllers datapath_ctrl which is 8 bits wide
-        done : out std_logic_vector(6 downto 0);
-        out_Prod: out std_logic_vector( 16 downto 0)
+        ctrl : in std_logic_vector( 5 downto 0);                        -- This has to be mapped to controllers datapath_ctrl which is 8 bits wide
+        done : out std_logic_vector(5 downto 0);
+        out_Prod: out std_logic_vector( 16 downto 0)                -- will change it later
             );
 end component;
 ---- DataPath ends here ----
@@ -75,11 +75,26 @@ component COEF_ROM IS
   PORT (
     clka : IN STD_LOGIC;
     ena : IN STD_LOGIC;
-    addra : IN STD_LOGIC_VECTOR(4 DOWNTO 0);
+    addra : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
     douta : OUT STD_LOGIC_VECTOR(13 DOWNTO 0)
   );
 END component;
 --- ROM behavioral Model ends here ---
+
+
+--- RAM Behavioral Model ----
+
+component SRAM_SP_WRAPPER is
+  port (
+    ClkxCI  : in  std_logic;
+    CSxSI   : in  std_logic;            -- Active Low
+    WExSI   : in  std_logic;            --Active Low
+    AddrxDI : in  std_logic_vector (7 downto 0);
+    RYxSO   : out std_logic;
+    DataxDI : in  std_logic_vector (31 downto 0);
+    DataxDO : out std_logic_vector (31 downto 0)
+    );
+end component;
 
 
 signal data_odd, data_even : out_port;                  -- is an array of std_logic_vector(7 downo 0) : SIZE = 16
@@ -94,9 +109,16 @@ signal row_count, next_row_count : unsigned( 1 downto 0);
 
 -- ROM data load signals
 signal address: unsigned( 3 downto 0);
-signal ROM_address : std_logic_vector( 4 downto 0 );
+signal ROM_address : std_logic_vector( 3 downto 0 );
 signal dataROM : std_logic_vector( 13 downto 0);    -- Elements of Co-efficient Matrix
 signal ROM_enable : std_logic;                      -- ROM enable Signal
+
+-- RAM STORE SIGNALS --
+  signal LOW  : std_logic;
+  signal HIGH : std_logic;
+  signal ramAddr : std_logic_vector(7 downto 0);        -- cam point to 256 memory locations
+  signal ramData_in , ramData_out : std_logic_vector( 31 downto 0 );      
+  signal  RY_SO : std_logic;  
 
 begin
 
@@ -112,23 +134,25 @@ LOADER: load_module
             o_done => done(0)
   );
 
+done(7) <= '0';             -- Hardcode 7th bit as '0'
 
 controller: MM_controller
   Port map ( 
         clk => clk,
         reset => reset,
-        done => done,                        -- comes from datapath, loader and RAM store units
+        done => (done),                        -- comes from datapath, loader and RAM store units
         load_count => load_count,
         ready => busy,
         datapath_ctrl => datapath_ctrl       -- this signal will activate section of datapath     
         );
         
- ROM_address <= "0" & std_logic_vector( address );  
+ ROM_address <= std_logic_vector( address );  
+ ROM_enable <= '1' ;
       
 ROM: COEF_ROM
   PORT map (
     clka => clk,
-    ena => '1',
+    ena => ROM_enable,
     addra =>ROM_address,
     douta =>dataROM
   );
@@ -143,10 +167,30 @@ datapath :data_path
         in_X_even => X_even,
         in_A_odd => A_odd,
         in_A_even => A_even,
-        ctrl => datapath_ctrl( 7 downto 1),
-        done => done( 7 downto 1),
+        ctrl => datapath_ctrl( 6 downto 1),
+        done => done( 6 downto 1),
         out_Prod => out_Prod
             );
+
+---- RAM STORE Module -----
+
+  
+  LOW  <= '0';
+  HIGH <= '1';
+ 
+ RAM_STORE : SRAM_SP_WRAPPER
+ port map(
+     ClkxCI  => clk,
+    CSxSI  => LOW,           -- Active Low
+    WExSI   => HIGH,            --Active Low
+    AddrxDI =>  ramAddr,            -- Some address counter
+    RYxSO  =>  RY_SO , -- WTF ?
+    DataxDI  =>ramData_in ,             --- This gets data from prod_elem
+    DataxDO =>  ramData_out
+    );
+    
+    
+ ----- END RAM STORE module -----
 
 -- Process to update input register of DataPath
 
@@ -294,4 +338,9 @@ ROM_Read : process( clk, address, ROM_enable )
     end if;
   end if;     
     end process;
+    
+   
+ 
+                
+ 
 end Behavioral;
