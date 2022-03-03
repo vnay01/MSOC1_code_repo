@@ -339,7 +339,13 @@ ROM_Read : process( clk, address, ROM_enable )
   end if;     
     end process;
     
-   
+ RAM_STORE_Proc: process( clk,  out_Prod)
+ begin
+    if rising_edge( clk) then
+        ramData_in(15 downto 0) <= out_Prod(15 downto 0);       -- recheck and match width 
+        ramData_in( 31 downto 16 ) <= ramData_in( 15 downto 0);
+        end if;
+ end process; 
  
                 
  
