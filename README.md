@@ -8,4 +8,4 @@ Lab3 : 8- bit ALU [Add, sub, mod3]
 Lab4 : Calculator with VGA display
 Lab5 : CNN
 [Working Comments]: 
-@22-Dec-2021 : Currently working on VGA controller 
+@3-Mar-2022 : Currently working on MatrixMultiplier
