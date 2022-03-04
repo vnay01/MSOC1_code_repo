@@ -1,3 +1,4 @@
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -5,73 +6,69 @@ library work;
 use work.array_pkg.all;
 
 
-
-entity tb_load_module is
+entity tb_MM_top is
 --  Port ( );
-end tb_load_module;
+end tb_MM_top;
 
-architecture Behavioral of tb_load_module is
+architecture Behavioral of tb_MM_top is
 
--- Component
 
-component load_module is
-  Port ( 
+-- components
+component MM_top is
+    Port (
             clk : in std_logic;
             reset : in std_logic;
-            i_x : in std_logic_vector(7 downto 0);
-            i_enable : in std_logic;
-            o_data_odd, o_data_even :out out_port;      -- refer array_pkg for type
-            o_done : out std_logic
-  );
+            Input_Mat : std_logic_vector( 7 downto 0);
+            prod_elem : out std_logic_vector( 15 downto 0) ;            -- This will hold 2 elements of product matrix
+            status : out std_logic                                      -- Goes HIGH when the system is computing 
+                                                                         -- ( i.e till RAM is filled with product elements)
+            );
 end component;
 
--- SIGNALS
 
+-- signals
+signal tb_Input_Mat : std_logic_vector( 7 downto 0 );
+signal tb_prod_elem : std_logic_vector( 15 downto 0);
+signal tb_status : std_logic;
+signal tb_reset : std_logic; 
 signal tb_clk : std_logic;
-signal tb_reset :std_logic;
-signal tb_i_enable : std_logic;
-signal tb_i_x : std_logic_vector( 7 downto 0);
-signal tb_o_data_odd, tb_o_data_even : out_port;
-signal tb_o_done : std_logic;
 
 constant period : time := 10 ns;
 
 
 
 begin
--- Clock process
-clock_sim:process
-    begin
+
+-- Clock Simulation
+clock: process           
+        begin
         tb_clk <= '0';
         wait for period/2;
         tb_clk <= '1';
         wait for period/2;
-end process;
+        end process;
 
-
-UUT_load : load_module
-port map (
-
-            clk => tb_clk,
-            reset => tb_reset,
-            i_x => tb_i_x,
-            i_enable => tb_i_enable,
-            o_data_odd => tb_o_data_odd,
-            o_data_even => tb_o_data_even,
-            o_done => tb_o_done
-  );
+UUT_MM: MM_top
+    port map(
+                clk => tb_clk,
+                reset => tb_reset,
+                Input_Mat => tb_Input_Mat,
+                prod_elem => tb_prod_elem,
+                status => tb_status
+                );
 
 -- STIMULUS
+
 
 tb_reset <= '1' after 1*period,
             '0' after 2*period;
 
-tb_i_enable <= '1' after 5*period,
-                '0' after 39*period,
-                '1' after 50*period,
-                '0' after 84*period;        -- Signal remains HIGH after 5 clock cycles.
+--tb_i_enable <= '1' after 5*period,
+--                '0' after 39*period,
+--                '1' after 50*period,
+--                '0' after 84*period;        -- Signal remains HIGH after 5 clock cycles.
 
-tb_i_x <= x"01" after 6*period,
+tb_Input_Mat <= x"01" after 6*period,
           x"02" after 7*period,
           x"03" after 8*period,
           x"04" after 9*period,
