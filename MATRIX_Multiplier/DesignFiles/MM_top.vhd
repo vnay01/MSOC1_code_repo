@@ -14,10 +14,6 @@ entity MM_top is
             clk : in std_logic;
             reset : in std_logic;
             Input_Mat : std_logic_vector( 7 downto 0);
---            start : in std_logic;                                       -- START signal active after load operation is done.
---            in_X_odd , in_X_even : std_logic_vector( 7 downto 0);       -- 8 bits wordlength
---            in_A_odd, in_A_even : std_logic_vector( 6 downto 0);        -- 7 bits wordlength
---            ctrl : in std_logic_vector( 7 downto 0);                       -- control signal from ControlUnit         Not really required if Control unit is integrated
             prod_elem : out std_logic_vector( 15 downto 0) ;            -- This will hold 2 elements of product matrix
             status : out std_logic                                      -- Goes HIGH when the system is computing 
                                                                         -- ( i.e till RAM is filled with product elements)
@@ -46,13 +42,28 @@ component MM_controller is
    Port ( 
         clk : in std_logic;
         reset : in std_logic;
-        done : in  std_logic_vector(7 downto 0);
+        done : in  std_logic_vector(5 downto 0);
         load_count : out unsigned( 1 downto 0);    -- used to select the element to load
         ready: out std_logic;                                   -- Shows status of the system
-        datapath_ctrl : out std_logic_vector( 7 downto 0)       -- this signal will activate section of datapath     
+        datapath_ctrl : out std_logic_vector( 5 downto 0)       -- this signal will activate section of datapath     
         );
 end component;
 ---- Controller Ends here ----
+component LOADER is
+    Port (  
+            clk : in std_logic;
+            enable : in std_logic;                  ------ comes from datapath_ctrl(2)
+            load_signal: in unsigned( 1 downto 0);
+            in_x_odd: in out_port;                  ----- array of ODD elements of Input Matrix 
+            in_x_even : in out_port;                ----- array of even elements of Input Matrix
+            out_x_odd: out std_logic_vector( 7 downto 0);       ----individual element of Input Matrix for calculation
+            out_x_even: out std_logic_vector( 7 downto 0);      ----individual element of Input Matrix for calculation
+            out_a_odd : out std_logic_vector( 6 downto 0);      ---- individual element of co-efficient matrix for calculation
+            out_a_even : out std_logic_vector( 6 downto 0);     ---- individual element of co-efficient matrix for calculation
+            done : out std_logic                                ---- goes HIGH when loading is done...... will be useful when timing has to be met!!!
+            
+             );
+end component;
 
 ---- DataPath -----
 component data_path is
@@ -67,6 +78,22 @@ Port (
             );
 end component;
 ---- DataPath ends here ----
+
+-- Multiply and Accumulate --
+
+component sig_altmult_accum is
+	port (
+		a			: in unsigned(7 downto 0);
+		b			: in unsigned (6 downto 0);
+		clk			: in std_logic;
+		sload		: in std_logic;
+		accum_out	: out unsigned (15 downto 0)
+	);
+	
+end component;
+
+
+-- MACC ends here --
 
 -- Signals
 
@@ -99,8 +126,9 @@ end component;
 
 signal data_odd, data_even : out_port;                  -- is an array of std_logic_vector(7 downo 0) : SIZE = 16
 signal out_Prod : std_logic_vector( 16 downto 0);
-signal done : std_logic_vector( 7 downto 0);
-signal datapath_ctrl : std_logic_vector( 7 downto 0);
+signal prod_elem_odd, prod_elem_even : unsigned(15 downto 0);               -- will be used to store product elements on RAM.
+signal done : std_logic_vector( 5 downto 0);
+signal datapath_ctrl : std_logic_vector( 5 downto 0);
 signal busy: std_logic;                                 -- will be used to indicate STATUS of the system.
 signal load_count  : unsigned( 1 downto 0);
 signal X_even, X_odd : std_logic_vector( 7 downto 0);
@@ -118,62 +146,99 @@ signal ROM_enable : std_logic;                      -- ROM enable Signal
   signal HIGH : std_logic;
   signal ramAddr : std_logic_vector(7 downto 0);        -- cam point to 256 memory locations
   signal ramData_in , ramData_out : std_logic_vector( 31 downto 0 );      
-  signal  RY_SO : std_logic;  
+  signal  RY_SO : std_logic;
+  
+-- SIGNALS for MACC module
+signal MACC_count : unsigned( 2 downto 0);
+
 
 begin
 
 
-LOADER: load_module 
-  Port map( 
-            clk => clk,
-            reset => reset,
-            i_x => Input_Mat,
-            i_enable => datapath_ctrl(0),               
-            o_data_odd =>data_odd ,
-            o_data_even => data_even ,
-            o_done => done(0)
-  );
 
-done(7) <= '0';             -- Hardcode 7th bit as '0'
+--done(7) <= '0';             -- Hardcode 7th bit as '0'
 
 controller: MM_controller
   Port map ( 
         clk => clk,
         reset => reset,
-        done => (done),                        -- comes from datapath, loader and RAM store units
+        done => done,                        -- comes from datapath, loader and RAM store units
         load_count => load_count,
         ready => busy,
         datapath_ctrl => datapath_ctrl       -- this signal will activate section of datapath     
         );
-        
- ROM_address <= std_logic_vector( address );  
- ROM_enable <= '1' ;
-      
-ROM: COEF_ROM
-  PORT map (
-    clka => clk,
-    ena => ROM_enable,
-    addra =>ROM_address,
-    douta =>dataROM
+ 
+ done(0)<= '1';
+ READER: load_module 
+  Port map( 
+            clk => clk,
+            reset => reset,
+            i_x => Input_Mat,
+            i_enable => datapath_ctrl(1),               
+            o_data_odd =>data_odd ,
+            o_data_even => data_even ,
+            o_done => done(1)
   );
+       
+ ROM_address <= std_logic_vector( address );  
+ ROM_enable <= '1' ;            -- SHOULD COME FROM MM_controller
+      
+      
+  -- removing rom ... using LOADER module
+ 
+  LOAD:LOADER
+     Port map (  
+            clk=> clk,
+            enable=> datapath_ctrl(2),                 ------ comes from datapath_ctrl(2)
+            load_signal => load_count,
+            in_x_odd=>  data_odd,               ----- array of ODD elements of Input Matrix 
+            in_x_even =>data_even,               ----- array of even elements of Input Matrix
+            out_x_odd => X_odd,     ----individual element of Input Matrix for calculation
+            out_x_even =>X_even,      ----individual element of Input Matrix for calculation
+            out_a_odd =>A_odd,      ---- individual element of co-efficient matrix for calculation
+            out_a_even =>A_even,
+            done => done(2)
+             );     
 
----- END ROM here 
 
-datapath :data_path
- Port map ( 
-        clk=> clk,
-        reset => reset,
-        in_X_odd => X_odd,
-        in_X_even => X_even,
-        in_A_odd => A_odd,
-        in_A_even => A_even,
-        ctrl => datapath_ctrl( 6 downto 1),
-        done => done( 6 downto 1),
-        out_Prod => out_Prod
+
+dataPath_odd: sig_altmult_accum
+port map(
+		a => unsigned((X_odd)),
+		b => unsigned((A_odd)),
+		clk => clk,
+		sload => datapath_ctrl(3),            -- datapath_ctrl(1) must remain HIGH for calculations to complete
+		accum_out => prod_elem_odd
             );
 
+dataPath_even: sig_altmult_accum
+port map(
+		a => unsigned((X_even)),
+		b => unsigned((A_even)),
+		clk => clk,
+		sload => datapath_ctrl(3),            -- datapath_ctrl(1) must remain HIGH for calculations to complete
+		accum_out => prod_elem_even
+            );
+            
+ MAC_counter :process(datapath_ctrl(3), clk, MACC_count)
+ begin
+ if rising_edge(clk) then
+    if datapath_ctrl(3) = '1' then
+    MACC_count <= MACC_count + 1;
+    else
+    MACC_count <= (others => '0');
+    end if;
+    if MACC_count = 7 then
+    done(3) <= '1';
+    else
+    done(3) <= '0';
+    end if;
+    end if;
+ end process;
+ 
 ---- RAM STORE Module -----
 
+done(4) <= '0';
   
   LOW  <= '0';
   HIGH <= '1';
@@ -181,134 +246,25 @@ datapath :data_path
  RAM_STORE : SRAM_SP_WRAPPER
  port map(
      ClkxCI  => clk,
-    CSxSI  => LOW,           -- Active Low
+    CSxSI  => HIGH,           -- Active Low
     WExSI   => HIGH,            --Active Low
     AddrxDI =>  ramAddr,            -- Some address counter
-    RYxSO  =>  RY_SO , -- WTF ?
+    RYxSO  =>  RY_SO , 
     DataxDI  =>ramData_in ,             --- This gets data from prod_elem
     DataxDO =>  ramData_out
     );
     
     
  ----- END RAM STORE module -----
+ 
+ 
+ -- Performance Block goes here ----
+ -- 
+done(5)<= '0';          -- will be updated by PERF_BLOCK eventually
+ --
+ --
+ ---- Performance Block ends ---
 
--- Process to update input register of DataPath
-
-mem_map:process( load_count, row_count )
-begin
-        case row_count is
-         when "00" =>
-            case load_count is
-            -- Counter for 1st element of product matrix
-            when "00" =>
-            address <= x"0";
-            X_odd <= data_odd(0);
-            X_even <= data_odd(2);
-            
-            when "01" =>
-            address <= x"1";
-            X_odd <= data_odd(4);
-            X_even <= data_odd(6);          
-            
-            when "10" =>
-            address <= x"2";
-            X_odd <= data_odd(8);
-            X_even <= data_odd(10);  
-            when "11" =>
-            address <= x"3";
-            X_odd <= data_odd(12);
-            X_even <= data_odd(14);
-            
-            when others =>
-            NULL;
-            
-            end case;
-        -- Counter for 2nd element
-       when "01" =>  
-            case load_count is
-            when "00" =>
-            address <= x"4";
-            X_odd <= data_even(0);
-            X_even <= data_even(2); 
-            when "01" =>
-            address <= x"5";
-            X_odd <= data_even(4);
-            X_even <= data_even(6); 
-            when "10" =>
-            address <= x"6";
-            X_odd <= data_even(8);
-            X_even <= data_even(10);
-            when "11" =>
-            address <= x"7";
-            X_odd <= data_even(12);
-            X_even <= data_even(14); 
-            when others =>
-            NULL;
-                        
-            end case;
-            -- Counter for 3rd element
-       when "10" =>
-        case load_count is     
-            when "00" =>
-            address <= x"8";
-            X_odd <= data_odd(1);
-            X_even <= data_odd(3); 
-            when "01" =>
-            address <= x"9";
-            X_odd <= data_odd(5);
-            X_even <= data_odd(7); 
-            when "10" =>
-            address <= x"a";
-            X_odd <= data_odd(9);
-            X_even <= data_odd(11); 
-            when "11" =>
-            address <= x"b";
-            X_odd <= data_odd(13);
-            X_even <= data_odd(15); 
-            when others =>
-            NULL;
-                        
-            end case;
-            -- Counter for 4th element
-       when "11" =>
-        case load_count is             
-            when "00" =>
-            address <= x"c";
-            X_odd <= data_even(1);
-            X_even <= data_even(3); 
-            when "01" =>
-            address <= x"d";
-            X_odd <= data_even(5);
-            X_even <= data_even(7); 
-            when "10" =>
-            address <= x"e";
-            X_odd <= data_even(9);
-            X_even <= data_even(11); 
-            when "11" =>
-            address <= x"f";
-            X_odd <= data_even(13);
-            X_even <= data_even(15);  
-            when others =>
-            NULL;
-                                                                                                                                                                                           
-            end case;
-            
-        when others =>
-            X_odd <= (others => '0');
-            X_even <= (others => '0');
-            end case;
-end process;
-
-rowCounter :process( load_count, row_count )
-    begin
-        if load_count = "11" then
-        next_row_count <= row_count + 1;
-        elsif row_count = "11" then
-        next_row_count <= "00";
-        else
-        next_row_count <= row_count;
-        end if;  
-    end process;
 
 register_up:process(clk,out_Prod, busy, row_count)
 begin
@@ -326,24 +282,13 @@ end process;
 -------- Needs to be integrated with ROM behavioral Model -----------
 ----------- Using Xilinx IP generator in the absence of ROM beh. model
 
-ROM_Read : process( clk, address, ROM_enable )
-    begin
-    if rising_edge(clk) then
-        if ROM_enable = '1' then    
-        A_odd <= dataROM(6 downto 0);
-        A_even <= dataROM( 13 downto 7);
-    else
-        A_odd <= (others =>'0');
-        A_even <= (others =>'0');
-    end if;
-  end if;     
-    end process;
-    
+  
+ --- This needs to be fixes ---- RAM STORE
  RAM_STORE_Proc: process( clk,  out_Prod)
  begin
     if rising_edge( clk) then
-        ramData_in(15 downto 0) <= out_Prod(15 downto 0);       -- recheck and match width 
-        ramData_in( 31 downto 16 ) <= ramData_in( 15 downto 0);
+        ramData_in(15 downto 0) <= std_logic_vector(prod_elem_odd);       -- recheck and match width 
+        ramData_in( 31 downto 16 ) <= std_logic_vector(prod_elem_even);
         end if;
  end process; 
  
