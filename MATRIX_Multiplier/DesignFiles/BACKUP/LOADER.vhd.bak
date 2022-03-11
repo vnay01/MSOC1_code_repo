@@ -32,7 +32,7 @@ architecture Behavioral of LOADER is
 
 
 --------- ROM for COEFFICIENT MATRIX --------
-component COEFF_ROM IS
+component COEF_ROM IS
    PORT (
   clka : IN STD_LOGIC;
   ena : IN STD_LOGIC;
@@ -63,7 +63,7 @@ signal elem_counter : unsigned(3 downto 0) ; ---- appended col & row
 begin
 
 
-COE_ROM :COEFF_ROM
+COEFF_ROM :COEF_ROM
     port map( 
               clka => clk,
               ena => enable,

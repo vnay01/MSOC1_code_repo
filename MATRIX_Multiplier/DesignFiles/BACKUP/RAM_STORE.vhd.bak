@@ -4,7 +4,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 library work;
---use work.COMPONENT_PKG.all;
+use work.COMPONENT_PKG.all;
 --
 
 entity RAM_STORE is
@@ -12,7 +12,7 @@ entity RAM_STORE is
 		clk : in std_logic;
 		reset : in std_logic;
 		enable : in std_logic;
-		write_enable :  in std_logic_vector(0 downto 0);
+		write_enable :  in std_logic;
 		address : in std_logic_vector(7 downto 0);
 		din : in std_logic_vector( 31 downto 0);
 		dout : out std_logic_vector( 31 downto 0)
@@ -20,10 +20,10 @@ entity RAM_STORE is
        );
 end RAM_STORE;
 
-architecture Behavioral of RAM_STORE is
+architecture Behavioral of perf_module is
 
 
-component PR_STORE IS
+component Input_Matrix IS
   PORT (
     clka : IN STD_LOGIC;
     ena : IN STD_LOGIC;
@@ -45,7 +45,7 @@ begin
 ----------- for Simulation  -- Insert RAM WRAPPER HERE -----
 
 ------------- Using xilinx Block RAM for testing---------
-PROD_STORE : PR_STORE
+PROD_STORE : Input_Matrix
 	port map (
 			clka => clk,
 			ena => enable,

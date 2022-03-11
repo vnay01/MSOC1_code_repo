@@ -39,8 +39,7 @@ entity MM_controller is
         ready: out std_logic;                                   -- Shows status of the system
         ram_addr : out std_logic_vector(7 downto 0);        -- addresses external RAM 
         datapath_ctrl : out std_logic_vector( 5 downto 0);       -- this signal will activate section of datapath     
-        write_enable : out std_logic;
-        store_address : out std_logic_vector(7 downto 0)
+        write_enable : out std_logic
 		);
 end MM_controller;
 
@@ -67,7 +66,6 @@ signal READ_COUNTER, READ_COUNTER_next : unsigned(3 downto 0);
 signal ram_addr_counter, next_ram_addr_counter: unsigned(7 downto 0);
 
 signal write_enable_next : std_logic;
-signal store_address_counter, store_address_counter_next : unsigned(7 downto 0);
 
 
 begin
@@ -89,7 +87,6 @@ if reset = '1' then
     SWITCH_reg <= (others => '0'); 
     READ_COUNTER <= (others => '0');
 	write_enable <= '0';
-	store_address_counter <= (others =>'0');
 elsif rising_edge(clk) then
     current_state <= next_state;
     datapath_ctrl <= datapath_ctrl_next; 
@@ -104,7 +101,6 @@ elsif rising_edge(clk) then
     SWITCH_reg <= SWITCH_reg_next;
     write_enable <= write_enable_next;
     READ_COUNTER <=  READ_COUNTER_next;
-    store_address_counter <= store_address_counter_next ;
     end if;
 end process;
 
@@ -112,7 +108,6 @@ end process;
 colum <= col_counter;
 row <= row_counter ;
 SWITCH <= SWITCH_reg;
-store_address <= std_logic_vector(store_address_counter);
 
 input_stimulus: process( clk, done )
 begin
@@ -143,7 +138,7 @@ end process;
 
 
 -- Next_state determination process
-registers: process(current_state, done_next, clk,status_count, col_counter, row_counter, MACC_COUNT, ram_addr_counter, READ_COUNTER, store_address_counter )
+registers: process(current_state, done_next, clk,status_count, col_counter, row_counter, MACC_COUNT, ram_addr_counter, READ_COUNTER )
 begin   
 
 --    if rising_edge(clk) then 
@@ -159,15 +154,13 @@ begin
      next_ready_status <= '0';
      next_ram_addr_counter <= ram_addr_counter;
 	 write_enable_next <= '0';
-     store_address_counter_next <= store_address_counter; 
+       
      READ_COUNTER_next <=  READ_COUNTER  ;  
-    
-    case current_state is
+      case current_state is
         
         when START =>                    -- reads input matrix "Done by LOAD_MODULE"
          datapath_ctrl_next <= "000011";        -- datapath_ctrl(0)
          MAC_clear_reg <= '1';
-         next_ready_status <= '1';
             if done_next = "000001" then      -- Where does this signal come from ??
             next_state <= READ;
             end if;
@@ -249,15 +242,10 @@ begin
         
         when LOAD =>
             datapath_ctrl_next <= "001100";            -- CONTROL signal to load unit for data reuse ( from ROM !! )
-            
+            row_counter_next <= row_counter +1;
           -------- SOMETHING HAS TO BE DONE ABOUT SWITCH signal-----------
-            SWITCH_reg_next <= SWITCH_reg + 1;
-            
-            if SWITCH_reg = 3 then
-               row_counter_next <= row_counter +1;
-               end if;
-                
-            if row_counter = 3 then                                          -- datapath_ctrl(2)
+          
+           if row_counter = 3 then                                          -- datapath_ctrl(2)
             col_counter_next <= col_counter +1;
             row_counter_next <= (others =>'0');
             end if;
@@ -305,23 +293,25 @@ begin
        when RAM_STORE =>
             
             datapath_ctrl_next <= "010000";       -- Enables RAM store module
-            store_address_counter_next <= store_address_counter + 1;                                         -- datapath_ctrl(4)
+                                                   -- datapath_ctrl(4)
 			write_enable_next <= '1';
-			if store_address_counter = 15 then
-			next_state <= PERF_CAL;
---			store_address_counter_next <= (others => '0');
-			end if;
-      
+            if status_count = 15 then
+            next_state <= PERF_CAL;
+            next_status_count <= (others =>'0');
+            else
+            next_status_count <= status_count + 1;
+            next_state <= READ;
+            end if;
+--        end if;
        
        when PERF_CAL =>
             datapath_ctrl_next <= "100000";       -- enables PERFORMANCE block
                                                   -- datapath_ctrl(5)
-          store_address_counter_next <= store_address_counter - 1;                             
-        
-        if store_address_counter = 0 then
-			next_state <= START;
-			end if;    
-			        
+--            if done_next = "100000" then
+            next_ready_status <= '1';
+            next_state <= READ;
+--            end if;         
+            
       when others =>
       NULL;
                 
