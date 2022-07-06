@@ -12,7 +12,7 @@ Design Files:
 	b) load_module.vhd
 	c) LOADER.vhd
 	d) sig_altmult_accum.vhd
-	e) SRAM_SP_WRAPPER.vhd
-	f) SPHD110420_FUNCT.vhd
+	e) SRAM_SP_WRAPPER.vhd ( proprietary )
+	f) SPHD110420_FUNCT.vhd ( proprietary )
 
 NOTE: LOADER module has an internal ROM ( IP from Xilinx ), which may not be synthesized.
