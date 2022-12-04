@@ -23,10 +23,15 @@
        Integrate Keyboard Controller,ALU and VGA controller to build a basic calculator.
        The display of this calculator is a VGA monitor.
 
-## 5 : Convolutional Neural Net Accelarator
+## 5 : Matrix Multipier
+       Design a matrix multiplier accelerator for signal processing applications. 
+       Goal is to learn the basics of ASIC design flow- starting from behavioal model to RTL synthesis and place n route. 
+       Eventually, I will take this matrix multiplier and use the principles of desigining for testability(DFT) to transform it into a DFT Matrix Multiplier.
+       [P.S: Works on NEXYS4 Dev board.]
+       
+## 6 : Convolutional Neural Net Accelarator
        Design an accelarator for convolution operation in a CNN model.
        Work in progress.
-
 
 [Working Comments]: 
 @26-Nov-2022 : Currently working on CNN
