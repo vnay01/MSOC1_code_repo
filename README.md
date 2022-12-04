@@ -28,6 +28,7 @@
        Goal is to learn the basics of ASIC design flow- starting from behavioal model to RTL synthesis and place n route. 
        Eventually, I will take this matrix multiplier and use the principles of desigining for testability(DFT) to transform it into a DFT Matrix Multiplier.
        [P.S: Works on NEXYS4 Dev board.]
+       [PSS: added a folder named 'work'. Use this to generate a working and updated design of EMM]
        
 ## 6 : Convolutional Neural Net Accelarator
        Design an accelarator for convolution operation in a CNN model.
