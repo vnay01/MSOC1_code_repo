@@ -500,6 +500,9 @@ signal w_select_line : std_logic_vector(7 downto 0);
 signal w_in_data: std_logic_vector( 7 downto 0);
 signal w_element_Sel : std_logic_vector( 2 downto 0);
 
+type arr_delay_reg is array (0 to 6) of std_logic_vector(7 downto 0);
+signal delay_reg : arr_delay_reg;
+
 -- block connections wires: ROM Register
 signal w_rom_en : std_logic;
 signal w_address : std_logic_vector( 6 downto 0 );
@@ -518,13 +521,18 @@ w_rom_en <= rom_en;
 w_rom_element_sel <= rom_element_sel;
 w_en_rom_block <= en_rom_block;
 
-Sample_Input:process(clk, enable)
+--Sample_Input:process(clk, enable, input_data)
+Sample_Input:process(clk)
     begin
+    
     if rising_edge(clk) then
+--    w_in_data <= input_data;
+        delay_reg(0) <= input_data;
         if enable = '1' then
-        w_in_data <= input_data;
-        --else
-        --w_in_data <= ( others => '0' );
+        for i in 1 to 6 loop
+        delay_reg(i) <= delay_reg(i-1);
+        end loop; 
+        w_in_data <= delay_reg(6);
         end if;
     end if;
     end process;

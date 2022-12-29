@@ -15,8 +15,8 @@ entity SRAM_SP_WRAPPER is
     WExSI   : in  std_logic;            --Active HIGH for Xilinx Block RAM
     AddrxDI : in  std_logic_vector (9 downto 0);
     RYxSO   : out std_logic;
-    DataxDI : in  std_logic_vector (15 downto 0);
-    DataxDO : out std_logic_vector (15 downto 0)
+    DataxDI : in  std_logic_vector (16 downto 0);
+    DataxDO : out std_logic_vector (16 downto 0)
     );
 end SRAM_SP_WRAPPER;
 
@@ -24,14 +24,14 @@ end SRAM_SP_WRAPPER;
 architecture rtl of SRAM_SP_WRAPPER is
 
 -- XILINX Block RAM
-component BRAM_1024x8 IS
+component BRAM_1024x16 IS
   PORT (
     clka : IN STD_LOGIC;
     ena : IN STD_LOGIC;
     wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
     addra : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
-    dina : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-    douta : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+    dina : IN STD_LOGIC_VECTOR(16 DOWNTO 0);
+    douta : OUT STD_LOGIC_VECTOR(16 DOWNTO 0)
   );
 END component;
 
@@ -54,7 +54,7 @@ w_wea(0) <= WExSI;
 CS <= (CSxSI);
 
 
-  DUT_ST_SPHDL_640x32m16_L_1 : BRAM_1024x8
+  DUT_ST_SPHDL_640x32m16_L_1 : BRAM_1024x16
   PORT map (
   clka => ClkxCI,
   ena => CS,

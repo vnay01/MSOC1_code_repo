@@ -22,8 +22,10 @@ entity MATRIX_MULTIPLIER is
        read: in std_logic;
        input_matrix : in std_logic_vector( 7 downto 0 );        -- Can be combined with output port LSB
        status : out std_logic;                              -- controller will update this
-       output_matrix : out std_logic_vector( 15 downto 0 );  -- Goes to RAM store controller 
-       mem_flag : out std_logic
+       output_matrix : out std_logic_vector( 16 downto 0 );  -- Goes to RAM store controller 
+       mem_flag : out std_logic;
+       data_hold : out std_logic;
+       gold_read_en: out std_logic                              --- ADDING test signals to enable reading from Golden Data RAM
        );
 end MATRIX_MULTIPLIER;
 
@@ -63,23 +65,8 @@ component MEM_WITH_RAM is
             enable : in std_logic;       -- enable signal from CONTROLLER
             read_enable_mem : in std_logic;  -- when active, place contents of address into buffer and display
 	        write_enable_mem : in std_logic;	
-            data_in : in std_logic_vector( 15 downto 0 );
-            data_out : out std_logic_vector( 15 downto 0);
-            mem_full_flag : out std_logic        
-             );
-end component;
-
--- Xilinx MEMORY BLOCK
-component MEM_WITH_RAM_BRAM is
-  Port (
-            clk: in std_logic;
-            reset : in std_logic;
-            enable : in std_logic;       -- enable signal from CONTROLLER
-            read_enable_mem : in std_logic;  -- when active, place contents of address into buffer and display
-	        write_enable_mem : in std_logic;	
-            data_in : in std_logic_vector( 15 downto 0 );
---            data_out : out std_logic_vector( 31 downto 0);
-	        data_out : out std_logic_vector( 15 downto 0);
+            data_in : in std_logic_vector( 16 downto 0 );
+            data_out : out std_logic_vector( 16 downto 0);
             mem_full_flag : out std_logic        
              );
 end component;
@@ -125,11 +112,11 @@ signal w_out_a1, w_out_a2, w_out_a3, w_out_a4 : std_logic_vector( 7 downto 0 );
 signal w_clear : std_logic;
 signal w_operand_x1, w_operand_x2, w_operand_x3, w_operand_x4 : std_logic_vector( 7 downto 0 );
 signal w_operand_a1, w_operand_a2, w_operand_a3, w_operand_a4 : std_logic_vector( 7 downto 0 );
-signal w_prod_element : std_logic_vector( 15 downto 0 );
+signal w_prod_element : std_logic_vector( 16 downto 0 );
 
 -- RAM CTRL signals
 signal w_enable : std_logic;
-signal w_prod_element_32 : std_logic_vector( 15 downto 0 ); -- NEEDS fixing
+signal w_prod_element_out : std_logic_vector( 16 downto 0 ); -- NEEDS fixing
 signal w_mem_full : std_logic;
 
 
@@ -274,13 +261,13 @@ DU_COMPUTE_UNIT : entity work.COMPUTE_UNIT(Behavioral)
         
 -- UNCOMMENT the line below to reconnect output data line. NOT TO BE USED DURING TESTING        
 
- output_matrix <= w_prod_element_32( 15 downto 0 );
+ 
  
  --------- UNCOMMENT ONLY WHEN TESTING -----------
 -- output_matrix <= w_prod_element( 15 downto 0 );
  
 -------------------------------------------------- 
-DU_MEM_WITH_RAM: entity work.MEM_WITH_RAM_BRAM(Behavioral)
+DU_MEM_WITH_RAM: entity work.MEM_WITH_RAM(Behavioral)
   Port map(
            clk => clk,
            reset => w_reset,
@@ -288,7 +275,11 @@ DU_MEM_WITH_RAM: entity work.MEM_WITH_RAM_BRAM(Behavioral)
            read_enable_mem => w_read_enable,
 	       write_enable_mem => w_ram_write,
            data_in => w_prod_element,
-           data_out => w_prod_element_32,
+           data_out => w_prod_element_out,
            mem_full_flag => w_mem_full
              );
+             
+output_matrix <= w_prod_element_out;
+gold_read_en <= w_read_enable;        
+data_hold<= w_DATA_HOLDER_en;      
 end Behavioral;

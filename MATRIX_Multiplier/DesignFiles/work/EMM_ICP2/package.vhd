@@ -34,7 +34,7 @@ component MUL is
 		enable : in std_logic;                            -- controller enables multiplication
 		operand_a : in std_logic_vector(7 downto 0);        -- input matrix
 		operand_b : in std_logic_vector (7 downto 0);       -- coefficiet elem
-        mul_out	: out unsigned (15 downto 0)
+        mul_out	: out unsigned (16 downto 0)
 	);
 	
 end component;
@@ -45,9 +45,9 @@ component ADDER_MODULE is
         clk : in std_logic;
         reset: in std_logic;
         enable : in std_logic;
-        operand_a: in unsigned(15 downto 0);
-        operand_b: in unsigned(15 downto 0);
-        adder_out: out unsigned( 15 downto 0 )
+        operand_a: in unsigned(16 downto 0);
+        operand_b: in unsigned(16 downto 0);
+        adder_out: out unsigned( 16 downto 0 )
         );
 end component;
 
@@ -66,7 +66,7 @@ component COMPUTE_UNIT is
         operand_a2:  in std_logic_vector( 7 downto 0 );
         operand_a3:  in std_logic_vector( 7 downto 0 );
         operand_a4:  in std_logic_vector( 7 downto 0 );
-        prod_element : out std_logic_vector( 15 downto 0 )
+        prod_element : out std_logic_vector( 16 downto 0 )
         );
 
 end component;
@@ -92,7 +92,7 @@ entity MUL is
 		enable : in std_logic;                            -- controller enables multiplication
 		operand_a : in std_logic_vector(7 downto 0);        -- input matrix
 		operand_b : in std_logic_vector (7 downto 0);       -- coefficiet elem
-        mul_out	: out unsigned (15 downto 0)
+        mul_out	: out unsigned (16 downto 0)
 	);
 	
 end MUL;
@@ -100,13 +100,14 @@ end MUL;
 architecture beh of MUL is
 
 -- Declare registers for intermediate values
-signal reg_operand_a, reg_operand_b : unsigned( 7 downto 0 );
-signal reg_mul_out : unsigned(15 downto 0);
+signal reg_operand_a : unsigned( 8 downto 0 );
+signal reg_operand_b : unsigned( 7 downto 0 );
+signal reg_mul_out : unsigned(16 downto 0);
 
 
 begin
-            reg_operand_a <= unsigned(operand_a);
-            reg_operand_b <= unsigned(operand_b);
+            reg_operand_a <= unsigned('0' & operand_a);
+            reg_operand_b <= unsigned( operand_b);
 process(clk, clear)
     begin
     if clear = '1' then
@@ -142,22 +143,22 @@ entity ADDER_MODULE is
         clk : in std_logic;
         reset: in std_logic;
         enable : in std_logic;
-        operand_a: in unsigned(15 downto 0);
-        operand_b: in unsigned(15 downto 0);
-        adder_out: out unsigned( 15 downto 0 )
+        operand_a: in unsigned(16 downto 0);
+        operand_b: in unsigned(16 downto 0);
+        adder_out: out unsigned( 16 downto 0 )
         );
 end ADDER_MODULE;
 
 architecture Behavioral of ADDER_MODULE is
 
-signal reg_operand_a, reg_operand_b : unsigned( 15 downto 0 );
-signal reg_adder_out : unsigned( 15 downto 0 );
+signal reg_operand_a, reg_operand_b : unsigned( 16 downto 0 );
+signal reg_adder_out : unsigned( 16 downto 0 );
 
 
 begin
 
-reg_operand_a <= operand_a;
-reg_operand_b <= operand_b;
+reg_operand_a <= (operand_a);
+reg_operand_b <= (operand_b);
 
 
 process(clk, reset)
@@ -206,7 +207,7 @@ entity COMPUTE_UNIT is
         operand_a2:  in std_logic_vector( 7 downto 0 );
         operand_a3:  in std_logic_vector( 7 downto 0 );
         operand_a4:  in std_logic_vector( 7 downto 0 );
-        prod_element : out std_logic_vector( 15 downto 0 )
+        prod_element : out std_logic_vector( 16 downto 0 )
         );
 
 end COMPUTE_UNIT;
@@ -215,11 +216,12 @@ architecture Behavioral of COMPUTE_UNIT is
 
 -- Signals
 -- Multiplier interconnections
-signal w_mul_out_1, w_mul_out_2, w_mul_out_3, w_mul_out_4 : unsigned( 15 downto 0 );
+signal w_mul_out_1, w_mul_out_2, w_mul_out_3, w_mul_out_4 : unsigned( 16 downto 0 );
 signal w_clear, w_enable : std_logic;
 
 -- Adder interconnections
-signal w_adder_out_1, w_adder_out_2, w_adder_out_3 : unsigned( 15 downto 0 );
+signal w_adder_out_1, w_adder_out_2 : unsigned(16 downto 0);
+signal w_adder_out_3 : unsigned( 16 downto 0 );
 
 begin
 

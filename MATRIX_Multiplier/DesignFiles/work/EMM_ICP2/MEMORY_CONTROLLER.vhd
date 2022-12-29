@@ -10,7 +10,7 @@ entity MEMORY_CONTROLLER is
            reset : in std_logic;
            enable : in std_logic;       -- enable signal from CONTROLLER connects to CSN
            read_enable : in std_logic;  -- when active, place contents of address into buffer and display
-	   write_enable : in std_logic;
+	       write_enable : in std_logic;
            ack : in std_logic;  -- Each RAM block ( RY signal is read and then connected to ack )
            ram_bank_select : out std_logic_vector( 1 downto 0 );  -- Since we have 4 separate RAM block, each block can be selected exclusively.
            address : out std_logic_vector( 9 downto 0 );
@@ -34,7 +34,7 @@ signal w_reset : std_logic;
 signal w_enable : std_logic;
 signal w_ram_bank_select,w_ram_bank_select_next  : unsigned( 1 downto 0 ) ;
 signal w_address, w_address_next : unsigned( 9 downto 0 );
-signal w_write_en : std_logic;
+signal w_write_en, w_write_en_next : std_logic;
 signal w_ack : std_logic;
 signal w_read_enable : std_logic;
 signal w_write_enable : std_logic;
@@ -43,7 +43,7 @@ signal w_memory_full, w_memory_full_next : std_logic;
 -- Internal Counters -- MAY NOT BE REQUIRED
 signal count_up, count_up_next : unsigned( 10 downto 0 );
 signal count_down, count_down_next : unsigned( 10 downto 0 );        -- To match address bus
-signal internal_counter, internal_counter_next : unsigned(1 downto 0);	-- Using it to avoid RYxSO !!!
+signal internal_counter, internal_counter_next : unsigned(2 downto 0);	-- Using it to avoid RYxSO !!!
 
 begin
 
@@ -71,6 +71,7 @@ begin
     w_ram_bank_select <= "11" ;
     w_memory_full <= '0';
     internal_counter <= (others => '0');
+    w_write_en <= '0';
     elsif rising_edge( clk ) then
         if w_enable = '1' then
     w_address <= w_address_next;
@@ -80,32 +81,30 @@ begin
     w_ram_bank_select <= w_ram_bank_select_next;
     w_memory_full <= w_memory_full_next;
     internal_counter <= internal_counter_next;
+    w_write_en <= w_write_en_next;
     end if;
     end if;
 end process; 
 
 STATE_CHANGE_LOGIC : process(  	current_state, w_read_enable, w_write_enable,
 				w_address, count_up, count_down, w_ram_bank_select,
-				w_memory_full, internal_counter )
+				w_memory_full, internal_counter, w_write_en )
  begin
         -- Default cases
         next_state <= current_state;
         w_address_next <= w_address;
         count_up_next <= count_up;
         count_down_next <= count_down;              
-	w_ram_bank_select_next <= "00";
+	    w_ram_bank_select_next <= "00";
         w_memory_full_next <= w_memory_full;
-   	internal_counter_next <= internal_counter;
+   	    internal_counter_next <= internal_counter;
+   	    w_write_en_next <= w_write_en;              -- Default
 
         
       case current_state is
         
         when IDLE =>
-
-            
-            
-	    w_write_en <= '1';      
---          if w_memory_full = '0' then
+      
             if w_read_enable = '1' then             -- Condition for STATE change
                next_state <= READ ;
             end if;
@@ -113,54 +112,48 @@ STATE_CHANGE_LOGIC : process(  	current_state, w_read_enable, w_write_enable,
 	    if w_write_enable = '1' then
                next_state <= WRITE;
             end if;
---          end if;
 	
             
 -- Use case block below to set internal flags and RAM block selection            
-            if w_address = "1001000000" then		-- Sets mem full flag at 576
+        if w_address = "1001000000" then		-- Sets mem full flag at 576
 		w_memory_full_next <= '1';
---		next_state <= READ;
 		end if;	
 
 
 
-         when READ =>
-        
-         
-         w_write_en <= '1';
+         when READ =>  
           
          internal_counter_next <= internal_counter + 1;
-
-         if internal_counter = "01" then
+         w_write_en_next <= '0';
+--         w_address_next <= w_address - 1;
+--         next_state <= IDLE;
+         
+         if internal_counter = "001" then
               w_address_next <= w_address - 1;
-              internal_counter_next <= "00";
-	      next_state <= IDLE;
+              internal_counter_next <= "000";
+	          next_state <= IDLE;
               end if;
 
---	if w_address = "0000000000" then
---		next_state <= IDLE;
---	end if;
---
+
                 
         when WRITE =>
         
             count_up_next <= count_up + 1; -- Increase counter when in WRITE state
             
-            w_write_en<= '0';
+            w_write_en_next<= '1';
 	
   	    internal_counter_next <= internal_counter + 1;
 	
-  	    if internal_counter = "01" then
-              next_state <= IDLE;
+  	      if internal_counter = "011" then
+            next_state <= IDLE;
               w_address_next <= w_address + 1;
-	      internal_counter_next <= "00";
+	          internal_counter_next <= "000";
             end if;
             
 
                         
         when others =>
         next_state <= IDLE;
-        w_write_en <= '1';
         
         end case;  
             

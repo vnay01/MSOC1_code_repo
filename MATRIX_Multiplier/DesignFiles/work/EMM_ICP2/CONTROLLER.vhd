@@ -192,68 +192,61 @@ state_change: process( current_state, init, ram_read, w_data_holder_en, w_reg_bl
     count_up_next <= count_up;
     count_down_next <= count_down;
     
-    --------------------- BLOCK ONLY FOR TESTING----------------------
---    state_counter_next <= state_counter;
-    ------------------------------------------------------------------     
+
     case current_state is 
 	
     
     
         when START =>
-        
-            w_busy_next <= w_busy;
             
             w_reg_block_select_next <= (others =>'0');
             w_reg_bank_select_next <= (others => '0');
             w_rom_element_sel_next <= (others => '0');
             w_rom_enable_next <= '0';
---            w_rom_address_next <= (others => '0');
-            
---            w_ram_write_enable_next <= '0';
---            w_ram_read_enable_next <= '0';
-            
-            
-            
-        
-            
+            w_ram_write_enable_next <= '0';
+            w_ram_read_enable_next <= '0';
+
             count_down_next <= o"1";
             idle_counter_next <= (others => '1');
-            
+            w_busy_next <= '0';
+-- State change condition
             if init = '1' then 
             next_state <= READ_IN;
+            
             w_busy_next <= '1';        
-            end if;                 -- State change condition
+            end if;                 
 
             if ram_read = '1' then
             next_state <= READ_RAM;
+            
             w_rom_enable_next <= '0';
             w_ram_enable_next <= '1';       -- if READ is HIGH, set RAM enable to '1' and jump to READ state
-
             w_busy_next <= '1';
+            count_up_next <= (others => '0');       -- RESET counters
 
             end if;          
             
     ----- Enables DATA HOLDER Block on state transition
-            w_data_holder_en_next <= '1' ;
+           w_data_holder_en_next <= '1' ;
+            
     ---------------------------------------------------
     
     
         when READ_IN =>
         
---        w_busy_next <= '1';
-          
+            
             w_rom_enable_next <= '1';
-            w_reg_bank_select_next <= w_reg_bank_select + 1;  -- selects next register within the register bank 
+--            w_reg_bank_select_next <= w_reg_bank_select ;  -- selects next register within the register bank 
             w_rom_element_sel_next <= w_rom_element_sel;    -- maintains current registers within ROM register bank
-                
-        -- reading ROM data
---            w_rom_enable_next <= '1';                    -- enables ROM block
+--            w_reg_bank_select_next <= w_reg_bank_select + 1;  
             count_down_next <= count_down - 1;           -- counts down every rising clock 
-    --        w_rom_address_next <= w_rom_address;         -- hold current address
+            
+            w_reg_bank_select_next <= w_reg_bank_select + 1;        -- Changes made here
             
             if count_down = 0 then 
-            w_rom_address_next <= w_rom_address + 1;         -- generate next address every 2 clock cycles
             count_down_next <= o"1";                         -- reset the counter to 1 -- Assuming 2 clock cycles for each read operation
+                        
+            w_rom_address_next <= w_rom_address + 1;         -- generate next address every 2 clock cycles
             w_rom_element_sel_next <= w_rom_element_sel + 1; -- selects next register to update -- Needs a delay of 2 clock cycles
             end if;
    ------------------------------------------------------
@@ -296,9 +289,7 @@ state_change: process( current_state, init, ram_read, w_data_holder_en, w_reg_bl
         w_compute_clear_next <= '1';    -- Clear Multiplier Units of any previous values!
         
         when IDLE =>
-        
-            
-        
+   
             w_data_holder_en_next <= '0' ;
             idle_counter_next <= idle_counter - 1;
             
@@ -313,23 +304,17 @@ state_change: process( current_state, init, ram_read, w_data_holder_en, w_reg_bl
             end if;
         
         when LOAD =>
-        
-        -- Disable RAM r/w
-        w_ram_write_enable_next <= '0';
-        w_ram_read_enable_next <= '0';
             
             next_state <= MUL;
             w_row_count_next <=  w_row_count + 1;
-             
-             
+
             if w_row_count = 15 then
             w_col_count_next <= w_col_count + 1;
             end if;
-            
+                        
 ----------- How would you stop when all columns have been calculated ?
------------ Use col_count
+----------- Use col_count :  There is a problem here.... 
             if w_col_count = 12 then
---                if w_row_count = 15 then
                 next_state <= START;
                 w_col_count_next <= (others => '0'); 
 --                end if;
@@ -366,15 +351,11 @@ state_change: process( current_state, init, ram_read, w_data_holder_en, w_reg_bl
         
         count_up_next <= count_up + 1;     -- dummy counter
     
---        if count_up = x"C0" and w_busy'event and w_busy = '0' then
-        if count_up = x"0C1" then
-        count_up_next <= (others => '0');
+        if count_up = x"0C1" then        
         next_state <= START;
---        w_ram_enable_next <= '0' ;
-        w_busy_next <= '0';
+--        w_busy_next <= '0';
         else 
         next_state <= LOAD ;
---       w_ram_enable_next <= '0' ;
         end if; 
   ------------------ TESTING BLOCK---------------------
 --  state_counter_next <= state_counter + 1;
@@ -384,16 +365,15 @@ state_change: process( current_state, init, ram_read, w_data_holder_en, w_reg_bl
         -- RAM write remains active for 192 elements
         w_ram_read_enable_next <= '1';
         count_up_next <= count_up + 1;     -- dummy counter
-       
+        w_data_holder_en_next <= '0' ;
 
 ---------- EACH READ OPERATION IS 3 CLOCK CYCLES LONG
------------ Ensure that a complete READ operation should produce 192 address i.e 190 * 3 = 570 clock cycles
+----------- Ensure that a complete READ operation should produce 192 address i.e 192 * 3 = 576 clock cycles
 ------------- Address Change happens within the STATE (READ) in this case.
     
-        if count_up = x"23B" then
+        if count_up = x"243" then
         count_up_next <= (others => '0');
-        next_state <= START;
-        
+        next_state <= START;      
         w_busy_next <= '0';
         end if; 
 --  -------------------- TESTING BLOCK---------------------

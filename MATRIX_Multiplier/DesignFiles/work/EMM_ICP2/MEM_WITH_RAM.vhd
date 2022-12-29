@@ -11,8 +11,8 @@ entity MEM_WITH_RAM is
             enable : in std_logic;       -- enable signal from CONTROLLER
             read_enable_mem : in std_logic;  -- when active, place contents of address into buffer and display
 	        write_enable_mem : in std_logic;	
-            data_in : in std_logic_vector( 15 downto 0 );
-	        data_out : out std_logic_vector( 15 downto 0);
+            data_in : in std_logic_vector( 16 downto 0 );
+	        data_out : out std_logic_vector( 16 downto 0);
             mem_full_flag : out std_logic        
              );
 end MEM_WITH_RAM;
@@ -26,7 +26,7 @@ component MEMORY_CONTROLLER is
            reset : in std_logic;
            enable : in std_logic;       -- enable signal from CONTROLLER connects to CSN
            read_enable : in std_logic;  -- when active, place contents of address into buffer and display
-	   write_enable : in std_logic;
+	       write_enable : in std_logic;
            ack : in std_logic;  -- Each RAM block ( RY signal is read and then connected to ack )
            ram_bank_select : out std_logic_vector( 1 downto 0 );  -- Since we have 4 separate RAM block, each block can be selected exclusively.
            address : out std_logic_vector( 9 downto 0 );
@@ -57,8 +57,8 @@ signal W_BANK : std_logic;
 signal w_address : std_logic_vector( 9 downto 0 );
 signal w_write_en : std_logic;
 signal w_memory_full : std_logic;
-signal w_data_in : std_logic_vector( 15 downto 0 );
-signal w_data_out : std_logic_vector( 15 downto 0 ); 
+signal w_data_in : std_logic_vector( 16 downto 0 );
+signal w_data_out : std_logic_vector( 16 downto 0 ); 
 
 
 begin
@@ -75,7 +75,7 @@ mem_full_flag <= w_memory_full;
 Sample_input:process(clk, w_write_en)
 begin
     if rising_edge( clk ) then
-        if w_write_en = '0' then
+        if w_write_en = '1' then
         w_data_in <= data_in;
 --        w_data_in(15 downto 8 ) <= x"0000";    -- MSB always set to 0 for now
         end if;
@@ -106,7 +106,8 @@ port map (
            );
 
 
-W_BANK <= w_ram_bank_select(0) and w_ram_bank_select(1);
+-- W_BANK <= w_ram_bank_select(0) and w_ram_bank_select(1);
+W_BANK <= '1';
 
 DU_RAM_BLOCK1: entity work.SRAM_SP_WRAPPER(rtl)
   port map (
