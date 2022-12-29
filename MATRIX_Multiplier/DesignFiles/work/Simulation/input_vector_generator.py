@@ -18,13 +18,21 @@ for i in range(65):
     num.append(values)
 print((num))
 
+#
+#file_object = open(prod_file_name,'a')
+#for i in range(len(list)):
+#    prod =list[i]
+#    file_object.write(str(prod))
+#    file_object.write('\n')
+#file_object.close()
+
+
 ##################################################
 #### changing directory
 ##### change the path to local directory where you would want to save the testvector.txt
 file_path = "C:/Users/vnay0/Desktop/IC_project/EMM_ICP2/EMM_ICP2.srcs/sources_1/imports/EMM_ICP2"
 #file_path = "E:/ICP2/DesignFiles"
 os.chdir(file_path)
-
 
 ## Create a stimulus file
 f = open("testvectors.txt","w+")

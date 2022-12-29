@@ -16,8 +16,9 @@ readline = read_object.read().splitlines()
 ## Create a 16 by 4 matrix from list
 shape = (16,4)
 X = np.array(readline, int).reshape(shape)
-
+print(X)
 A = np.array(D,int).reshape(4,12)
+print(A)
 C=np.dot(X,A).reshape(16,12)
 print(type(A))
 print('\n')
@@ -32,7 +33,7 @@ print(len(list))
 ### Writing product matrix to a file
 ## Choose file path as per your folder structure
 file_path = "C:/Users/vnay0/Desktop/IC_project/EMM_ICP2/EMM_ICP2.srcs/sources_1/imports/EMM_ICP2"
-
+file_path_coe = "C:/Users/vnay0/Desktop/IC_project/RAM_test/RAM_test.srcs/sources_1/new"
 os.chdir(file_path)
 
 prod = []
@@ -50,3 +51,23 @@ for i in range(len(list)):
     file_object.write(str(prod))
     file_object.write('\n')
 file_object.close()
+
+# COE file generation
+os.chdir(file_path_coe)
+
+file = open("golden_data.coe", "w+")
+file.write('memory_initialization_radix=10;')
+file.write('\n')
+file.write('memory_initialization_vector=')
+file.write('\n')
+file.close()
+
+for col in range(12):
+    for row in range(16):
+       # print(decimalToBinary(i))
+       # num = decimalToBinary(randint(0,i))
+     file = open("golden_data.coe", "a")
+     file.write(str(C[row,col]))
+     file.write(',')
+     file.write('\n')
+file.close()
