@@ -32,8 +32,8 @@
        
 ## 6 : Convolutional Neural Net Accelarator
        Design an accelarator for convolution operation in a CNN model.
-       Work in progress. Shifted to Verilog. Moved over to 
-       [I'm an inline-style link](https://github.com/vnay01/VerilogCodes/tree/master/NeuralNetworks)
+       Work in progress. Shifted to Verilog. Moved over to  
+       **/vnay01/VerilogCodes/tree/master/NeuralNetworks/** repo
 
 [Working Comments]: 
 @26-Nov-2022 : Currently working on CNN
