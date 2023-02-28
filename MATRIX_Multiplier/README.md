@@ -1,4 +1,4 @@
-## You may need to regenerate before starting Synthesis Flow:
+## You may need to regenerate Xilinx memory IPs before starting Synthesis Flow :
 
 Files present in  ***" /MATRIX_Multiplier/DesignFiles/work "*** are the most updated and works.
 
